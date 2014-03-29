@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../dist/filer.min.js"></script>
+    <script>
+      function print(s) {
+        document.getElementById('output').innerHTML = s;
+      }
+
+      function Filesystem(flags) {
+        var fs = this.fs = new Filer.FileSystem({
+          flags: flags,
+          provider: new Filer.FileSystem.providers.Fallback()
+        });
+        this.sh = fs.Shell();
+      }
+      Filesystem.prototype.install = function(url) {
+        var sh = this.sh;
+        sh.wget(url, function(err, path) {
+          if(err) {
+            return print('Error: Unable to download filesystem image `' + url + '`');
+          }
+
+          sh.unzip(path, function(err) {
+            if(err) {
+              return print('Error: Unable to extract filesystem image');
+            }
+
+            sh.rm(path, function(err) {
+              if(err) {
+                print('Warning: Unable to remove filesystem image archive `' + path + '`');
+              }
+
+              print('Installed filesystem.');
+            });
+          });
+        });
+      };
+      Filesystem.prototype.load = function(path) {
+        var fs = this.fs;
+        path = Filer.Path.resolve('/', path);
+        fs.readFile(path, 'utf8', function(err, data) {
+          if(err) {
+            return print('Error: Unable to load `' + filepath + '`');
+          }
+
+          document.write(data);
+        });
+      };
+
+      function boot() {
+        var fs;
+        var bootOption = location.search.substring(1).split('=');
+
+        switch(bootOption[0]) {
+        case 'format':
+          fs = new Filesystem(['FORMAT']);
+          print('Formatted filesystem.');
+          break;
+        case 'install':
+          fs = new Filesystem();
+          fs.install(bootOption[1]);
+          break;
+        case 'load':
+          fs = new Filesystem();
+          fs.load(bootOption[1]);
+          break;
+        default:
+          print('Error: Unknown boot option `' + bootOption[0] + '`.');
+          break;
+        }
+      }
+
+      addEventListener('DOMContentLoaded', boot, false);
+    </script>
+  </head>
+  <body>
+    <div id="output"></div>
+    <div>
+      <h3>Filer bootloader</h3>
+      <p>This page is a bootloader capable of creating a Filer filesystem,
+         installing a zipped archive to that filesystem, and loading files from it.</p>
+
+      <p>Boot options are passed on the query string. Valid options include:</p>
+      <ul>
+        <li><code>?install={zipfile url}</code> (e.g., <a href="?install=makerstrap-master.zip">?install=makerstrap-master.zip</a>)
+        <li><code>?load={path to file in filesystem}</code> (e.g., <a href="?load=/makerstrap-master/demo/index.html">?load=/makerstrap-master/demo/index.html</a>
+        <li><code>?format</code (e.g., <a href="?format">format the current fs (wipe it)</a>
+      </ul>
+    </div>
+  </body>
+</html>
