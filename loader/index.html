@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <script src="../dist/filer.min.js"></script>
+    <script src="preprocess.js"></script>
     <script>
       function print(s) {
         document.getElementById('output').innerHTML = s;
@@ -42,10 +43,15 @@
         path = Filer.Path.resolve('/', path);
         fs.readFile(path, 'utf8', function(err, data) {
           if(err) {
-            return print('Error: Unable to load `' + filepath + '`');
+            return print('Error: Unable to load `' + path + '`');
           }
 
-          document.write(data);
+          preprocess.html(data, path, fs, function(err, html) {
+            if(err) {
+              return print('Error: Unable to preprocess `' + path + '`');
+            }
+            document.write(html);
+          });
         });
       };
 
