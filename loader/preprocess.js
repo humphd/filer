@@ -50,14 +50,6 @@ var preprocess = (function(){
   var Path = Filer.Path;
 
   function mimeFromExt(ext) {
-    // css - data:text/css;base64,
-    // js - data:text/javascript;base64,
-    // markdown, json, otf, ... - data:application/octet-stream;base64,
-    // svg - data:image/svg+xml;base64,
-    // png - data:image/png;base64,
-    // ico - data:image/x-icon;base64,
-    // jpg - data:image/jpeg;base64,
-    // gif - data:image/gif;base64,
     switch(ext) {
       case '.css':
         return 'text/css';
@@ -147,9 +139,20 @@ var preprocess = (function(){
     // TODO
   }
 
+  function image(unprocessed, location, fs) {
+    var ext = Path.extname(location);
+    var mime = mimeFromExt(ext);
+    unprocessed = escape(encodeURIComponent(unprocessed));
+    var html = '<html><head><title>' + location + '</title></head><body>' + 
+               '<img src="' + toDataURL(unprocessed, mime) + '"></body></html>';
+    console.log(html);
+    document.write(html);
+  }
+
   return {
     html: html,
-    css: css
+    css: css,
+    image: image
   };
 
 }());
