@@ -49,7 +49,7 @@ var preprocess = (function(){
 
   var Path = Filer.Path;
 
-  function toDataURL(data, type) {
+  function mimeFromExt(ext) {
     // css - data:text/css;base64,
     // js - data:text/javascript;base64,
     // markdown, json, otf, ... - data:application/octet-stream;base64,
@@ -58,7 +58,27 @@ var preprocess = (function(){
     // ico - data:image/x-icon;base64,
     // jpg - data:image/jpeg;base64,
     // gif - data:image/gif;base64,
-    type = type || 'application/octet-stream';
+    switch(ext) {
+      case '.css':
+        return 'text/css';
+      case '.js':
+        return 'text/javascript';
+      case '.svg':
+        return 'image/svg+xml';
+      case '.png':
+        return 'image/png';
+      case '.ico':
+        return 'image/x-icon';
+      case '.jpg':
+      case '.jpeg':
+        return 'image.jpeg';
+      case '.gif':
+        return 'image/gif';
+    }
+    return 'application/octet-stream';
+  }
+
+  function toDataURL(data, type) {
     var encoded = btoa(data);
     return 'data:' + type + ';base64,' + encoded;
   }
@@ -94,6 +114,7 @@ var preprocess = (function(){
           }
           fs.readFile(path, 'utf8', function(err, data) {
             if(err) return cb(err);
+            mime = mime || mimeFromExt(Path.extname(path));
             elem[urlType] = toDataURL(data, mime);
             cb();
           });
@@ -110,6 +131,9 @@ var preprocess = (function(){
     async.series([
       function links(callback) {
         elements('link', 'href', 'text/css', callback);
+      },
+      function imgs(callback) {
+        elements('img', 'src', null, callback);
       },
       function scripts(callback) {
         elements('script', 'src', 'text/javascript', callback);

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <script src="../dist/filer.min.js"></script>
     <script src="async.js"></script>
+    <script src="notfound.js"></script>
     <script src="preprocess.js"></script>
     <script>
       function print(s) {
@@ -41,17 +42,40 @@
       };
       Filesystem.prototype.load = function(path) {
         var fs = this.fs;
+        var sh = this.sh;
         path = Filer.Path.resolve('/', path);
-        fs.readFile(path, 'utf8', function(err, data) {
+
+        fs.stat(path, function(err, stats) {
           if(err) {
-            return print('Error: Unable to load `' + path + '`');
+            // 404
+            document.write(notFoundHTML(path));
+            return;
           }
 
-          preprocess.html(data, path, fs, function(err, html) {
+          // If this is a dir, show a dir listing
+          if(stats.isDirectory()) {
+            sh.ls(path, function(err, list) {
+              if(err) {
+                // 404
+                document.write(notFoundHTML(path));
+                return;
+              }
+              document.write(listingHTML(path, list));
+            });
+            return;
+          }
+
+          fs.readFile(path, 'utf8', function(err, data) {
             if(err) {
-              return print('Error: Unable to preprocess `' + path + '`');
+              return print('Error: Unable to load `' + path + '`');
             }
-            document.write(html);
+
+            preprocess.html(data, path, fs, function(err, html) {
+              if(err) {
+                return print('Error: Unable to preprocess `' + path + '`');
+              }
+              document.write(html);
+            });
           });
         });
       };
@@ -59,23 +83,21 @@
       function boot() {
         var fs;
         var bootOption = location.search.substring(1).split('=');
+        var option = bootOption[0];
+        var value = bootOption[1];
 
-        switch(bootOption[0]) {
-        case 'format':
+        if(option === 'format') {
           fs = new Filesystem(['FORMAT']);
-          print('Formatted filesystem.');
-          break;
-        case 'install':
+          print('Formatted filesystem.');          
+        } else {
           fs = new Filesystem();
-          fs.install(bootOption[1]);
-          break;
-        case 'load':
-          fs = new Filesystem();
-          fs.load(bootOption[1]);
-          break;
-        default:
-          print('Error: Unknown boot option `' + bootOption[0] + '`.');
-          break;
+        }
+
+        if(option === 'install') {
+          fs.install(value);          
+        } else {
+          // Treat everything after the ? as a path to be loaded
+          fs.load(option);
         }
       }
 
