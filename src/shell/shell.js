@@ -426,4 +426,78 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
+/**
+ * wc - count the number of bytes, lines, words, characters.
+ * Specifying a specific set of counts to do will mean only
+ * those counts are performed (e.g., {bytes: true} counts only
+ * the file's bytes.
+ */
+Shell.prototype.wc = function(path, options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  
+  // Deal with optional options object
+  if(typeof options === 'function') {
+    callback = options;
+    options = null;
+  }
+  callback = callback || function(){};
+  
+  // Default to always give everything.
+  options = options || { 
+    bytes: true,
+    lines: true,
+    words: true,
+    characters: true
+  };
+
+  path = Path.resolve(sh.pwd(), path);
+  
+  // Read the file as binary
+  fs.readFile(path, function(err, data) {
+    if(err) {
+      return callback(err);
+    }
+
+    // Cache the byte count
+    var byteCount = data.length;
+    var lineCount = 0;
+    var wordCount = 0;        
+    var totals = {};
+    
+    if(options.bytes) {
+      totals.bytes = byteCount;
+    }
+    
+    if(options.lines) {
+      // Lines are ended by \n, which is char code 10
+      for(var i=0; i<byteCount; i++) {
+        if(data[i] === 10) lineCount++
+      } 
+      // Use 1 instead of 0, if no lines were found.
+      totals.lines = lineCount || 1;
+    }
+
+    // For words/characters, we need UTF8, so convert Buffer to String,
+    if(options.words || options.characters) {
+      var utf8 = data.toString('utf8');
+
+      if(options.words) {
+        // Split on word characters, filter empty matches (e.g., punctuation)
+        // and get length of array.
+        wordCount = utf8.split(/\w*/)
+                        .filter(function(word) { return word.length > 0; })
+                        .length;
+        totals.words = wordCount;
+      }
+      
+      if(options.characters) {
+        totals.characters = utf8.length; 
+      }
+    }
+
+    callback(null, totals);
+  });
+};
+
 module.exports = Shell;
