@@ -426,4 +426,23 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
+//Disk Usage - du
+Shell.prototype.du = function(path, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  callback = callback || function(){};
+    
+  path = Path.resolve(sh.pwd(), path);
+  
+  fs.readFile(path, function(err, data) {
+    if(err){
+        return callback(err);
+    }
+    
+    var byteCount = data.length;
+      
+    callback(null, byteCount);
+  });
+};
+
 module.exports = Shell;
