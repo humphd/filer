@@ -59,6 +59,84 @@ function Shell(fs, options) {
 }
 
 /**
+ * Get the total size for the directory and each
+ * subdirectory, returning an array of directory
+ * entries in the following form:
+ *
+ * {
+ *   total: <Number> the total size in bytes of the directory
+ *   entries: [
+ *     {  filepath: <String> the file path of the entry
+ *        size: <Number> the size in bytes of the entry
+ *     }
+ *   ]
+ * }
+ *
+ */
+Shell.prototype.du = function(dir, options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  callback = callback || function(){};
+
+  if(!dir) {
+    callback(new Errors.EINVAL('Missing dir argument'));
+    return;
+  }
+
+  function list(path, callback) {
+    var pathname = Path.resolve(sh.pwd(), path);
+    var result = [];
+
+    fs.readdir(pathname, function(error, entries) {
+      if(error) {
+        callback(error);
+        return;
+      }
+
+      function getDirEntry(name, callback) {
+        name = Path.join(pathname, name);
+        fs.stat(name, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+          var entry = {
+            filepath: Path.basename(name),
+            size: stats.size,
+          };
+
+          if(options.recursive && stats.type === 'DIRECTORY') {
+            list(Path.join(pathname, entry.path), function(error, items) {
+              if(error) {
+                callback(error);
+                return;
+              }
+              entry.contents = items;
+              result.push(entry);
+              callback();
+            });
+          } else {
+            result.push(entry);
+            callback();
+          }
+        });
+      }
+
+      async.eachSeries(entries, getDirEntry, function(error) {
+        callback(error, result);
+      });
+    });
+  }
+
+  list(dir, callback);
+}
+
+/**
  * Execute the .js command located at `path`. Such commands
  * should assume the existence of 3 arguments, which will be
  * defined at runtime:
