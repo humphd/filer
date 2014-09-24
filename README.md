@@ -1,6 +1,6 @@
 [![NPM](https://nodei.co/npm/filer.png?downloads=true&stars=true)](https://nodei.co/npm/filer/)
 
-[![Build Status](https://secure.travis-ci.org/filerjs/filer.png?branch=develop)](http://travis-ci.org/filerjs/filer)
+[![Build Status](https://secure.travis-ci.org/js-platform/filer.png?branch=develop)](http://travis-ci.org/js-platform/filer)
 
 ###Filer
 
@@ -24,7 +24,7 @@ See the section on [Storage Providers](#providers).
 
 ### Contributing
 
-Want to join the fun? We'd love to have you! See [CONTRIBUTING](https://github.com/filerjs/filer/blob/develop/CONTRIBUTING.md).
+Want to join the fun? We'd love to have you! See [CONTRIBUTING](https://github.com/js-platform/filer/blob/develop/CONTRIBUTING.md).
 
 ### How to Get It
 
@@ -32,7 +32,7 @@ Filer can be obtained in a number of ways:
 
 1. npm - `npm install filer`
 2. bower - `bower install filer`
-3. download pre-built versions: [filer.js](https://raw.github.com/filerjs/filer/develop/dist/filer.js), [filer.min.js](https://raw.github.com/filerjs/filer/develop/dist/filer.min.js)
+3. download pre-built versions: [filer.js](https://raw.github.com/js-platform/filer/develop/dist/filer.js), [filer.min.js](https://raw.github.com/js-platform/filer/develop/dist/filer.min.js)
 
 ### Loading and Usage
 
@@ -234,7 +234,7 @@ For more info see the docs in the [path module](http://nodejs.org/api/path.html)
 
 The error objects used internally by Filer are also exposed via the `Filer.Errors` object. As much as possible
 these match their node.js counterparts, with a few Filer-specifc additions.
-See [src/errors.js](https://github.com/filerjs/filer/blob/develop/src/errors.js) for the complete
+See [src/errors.js](https://github.com/js-platform/filer/blob/develop/src/errors.js) for the complete
 list. Errors can be used, or compared, like so:
 
 Examples:
@@ -567,7 +567,7 @@ fs.symlink('/logs/august.log', '/logs/current', function(error) {
 
 #### fs.realpath(path, [cache], callback)<a name="realpath"></a>
 
-NOTE: Not implemented, see https://github.com/filerjs/filer/issues/85
+NOTE: Not implemented, see https://github.com/js-platform/filer/issues/85
 
 #### fs.unlink(path, callback)<a name="unlink"></a>
 
@@ -751,7 +751,7 @@ fs.open('/myfile.txt', function(err, fd) {
 
 #### fs.fsync(fd, callback)<a name="fsync"></a>
 
-NOTE: Not yet implemented, see https://github.com/filerjs/filer/issues/87
+NOTE: Not yet implemented, see https://github.com/js-platform/filer/issues/87
 
 #### fs.write(fd, buffer, offset, length, position, callback)<a name="write"></a>
 
@@ -1167,6 +1167,7 @@ var sh = fs.Shell();
 * [sh.rm(path, [options], callback)](#rm)
 * [sh.tempDir(callback)](#tempDir)
 * [sh.mkdirp(path, callback)](#mkdirp)
+* [sh.du(path, callback)](#du)
 
 
 #### sh.cd(path, callback)<a name="cd"></a>
@@ -1371,5 +1372,41 @@ Example:
 sh.mkdirp('/test/mkdirp', function(err) {
   if(err) throw err;
   // the root '/' now contains a directory 'test' containing the directory 'mkdirp'
+});
+```
+
+#### sh.du(dir, callback)<a name="du"></a>
+
+Get the listing of size(s) of the file entries, returning an array of sizes of file entry 
+in the following form:
+```
+{
+  path: <String> the basename of the directory entry
+  size: <Number> the size in bytes of the entry
+  contents: <Array> an optional array of child entries, if this entry is itself a directory
+}
+```
+
+By default `sh.du()` gives a deep listing. 
+
+Example:
+
+```javascript
+/**
+ * Given a dir structure of:
+ *
+ * /dir
+ *  file1
+ *  file2
+ *  dir2/
+ *   file3
+ */
+
+// Deep listing
+sh.du('/dir', function(err, entries) {
+  if(err) throw err;
+  // entries is now an array of 3 file/dir entries under /dir.
+  // The entry object for '/dir2' also includes a `contents` property,
+  // which is an array of 1 entry element for `file3`.
 });
 ```
