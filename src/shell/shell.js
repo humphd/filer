@@ -163,22 +163,22 @@ Shell.prototype.du = function(path, callback) {
     return;
   }
   
-fs.lstatSync(path, function (error, lstat) {
-  if(lstat.isFile)
-  {
-    fs.stat(path, function(error, stats) {
-    sizes{
-        total: stats.size
-        entries: [{path, stats.size}] 
-      } 
-    });
-  }
-  else if(lstat.isDirectory)
-  {
+  fs.lstatSync(path, function (error, lstat) {
+    if(lstat.isFile)
+    {
+      fs.stat(path, function(error, stats) {
+      sizes{
+          total: stats.size
+          entries: [{path, stats.size}] 
+        } 
+      });
+    }
+    else if(lstat.isDirectory)
+    {
 
 
-  }
-});
+    }
+  });
 };
 
 /**
