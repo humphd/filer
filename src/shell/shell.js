@@ -58,6 +58,10 @@ function Shell(fs, options) {
   };
 }
 
+
+
+
+
 /**
  * Execute the .js command located at `path`. Such commands
  * should assume the existence of 3 arguments, which will be
@@ -141,6 +145,61 @@ Shell.prototype.touch = function(path, options, callback) {
       updateTimes(path);
     }
   });
+};
+
+
+/**
+ * Gives the usage of a file or directory in the file sytem.
+ */
+Shell.prototype.du = function(dir, callback) {
+  var sh = this;
+  var fs = sh.fs;
+
+  callback = callback || function(){};
+
+  if(!dir) {
+    callback(new Errors.EINVAL('Missing dir argument'));
+    return;
+  }
+
+  function list(path, callback) {
+    var pathname = Path.resolve(sh.pwd(), path);
+    var result = [];
+
+    fs.readdir(pathname, function(error, entries) {
+      if(error) {
+        callback(error);
+        return;
+      }
+
+      function getDirEntry(name, callback) {
+        name = Path.join(pathname, name);
+        fs.stat(name, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+          var entry = {
+            path: Path.basename(name),
+            size: stats.size
+          };
+            result.push(entry);
+            callback();
+        });
+      }
+
+      async.eachSeries(entries, getDirEntry, function(error) {
+        callback(error, result);
+      });
+    });
+  }
+
+  list(dir, callback);
+};
+  
+
+
+
 };
 
 /**
