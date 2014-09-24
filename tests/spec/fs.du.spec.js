@@ -17,6 +17,7 @@ describe('fs.du', function() {
     fs.du('/tmp/myfile.txt', function(error, sizes) {
       expect(error).to.exist;
       expect(sizes).not.to.exist;
+      expect(error.code).to.equal("ENOENT");
       done();
     });
   });

@@ -154,7 +154,7 @@ Shell.prototype.touch = function(path, options, callback) {
 Shell.prototype.du = function(path, callback) {
   var sh = this;
   var fs = sh.fs;
-  var sizes = new Object();
+  var sizes = {};
 
   callback = callback || function(){};
 
@@ -162,22 +162,30 @@ Shell.prototype.du = function(path, callback) {
     callback(new Errors.EINVAL('Missing path argument'));
     return;
   }
-  
-  fs.lstatSync(path, function (error, lstat) {
-    if(lstat.isFile)
-    {
-      fs.stat(path, function(error, stats) {
-      sizes{
-          total: stats.size
-          entries: [{path, stats.size}] 
-        } 
-      });
-    }
-    else if(lstat.isDirectory)
-    {
 
+  path.exists(path, function(exists) { 
+  if (exists) {
+    fs.stat(path, function (error, stat) {
+      if(stat.isFile())
+      {
+        sizes{
+            total: stat.size
+            entries: [{path.toString(): stat.size}] 
+          } 
+      }
+      else if(stat.isDirectory())
+      {
+        //Do this if it's a directory
 
+      }
     }
+    else
+    {
+      callback(new Errors.ENOENT('Path does not exist'));
+      return;
+    }  
+  }); 
+
   });
 };
 
