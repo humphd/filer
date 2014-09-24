@@ -164,7 +164,9 @@ Shell.prototype.du = function(dir, callback) {
 
   function list(path, callback) {
     var pathname = Path.resolve(sh.pwd(), path);
-    var result = [];
+    var sizes = [];
+    var entries = [];
+    var total;
 
     fs.readdir(pathname, function(error, entries) {
       if(error) {
@@ -179,14 +181,16 @@ Shell.prototype.du = function(dir, callback) {
             callback(error);
             return;
           }
+          total += stats.size;
           var entry = {
             path: Path.basename(name),
             size: stats.size
           };
-            result.push(entry);
+            entries.push(entry);
             callback();
         });
       }
+      entries.push(total);
 
       async.eachSeries(entries, getDirEntry, function(error) {
         callback(error, result);
@@ -196,7 +200,7 @@ Shell.prototype.du = function(dir, callback) {
 
   list(dir, callback);
 };
-  
+
 
 
 
