@@ -151,58 +151,31 @@ Shell.prototype.touch = function(path, options, callback) {
 /**
  * Gives the usage of a file or directory in the file sytem.
  */
-Shell.prototype.du = function(dir, callback) {
+Shell.prototype.du = function(path, callback) {
   var sh = this;
   var fs = sh.fs;
 
   callback = callback || function(){};
 
-  if(!dir) {
-    callback(new Errors.EINVAL('Missing dir argument'));
+  if(!path) {
+    callback(new Errors.EINVAL('Missing path argument'));
     return;
   }
 
-  function list(path, callback) {
-    var pathname = Path.resolve(sh.pwd(), path);
-    var sizes = [];
-    var entries = [];
-    var total;
-
-    fs.readdir(pathname, function(error, entries) {
-      if(error) {
-        callback(error);
-        return;
-      }
-
-      function getDirEntry(name, callback) {
-        name = Path.join(pathname, name);
-        fs.stat(name, function(error, stats) {
-          if(error) {
-            callback(error);
-            return;
-          }
-          total += stats.size;
-          var entry = {
-            path: Path.basename(name),
-            size: stats.size
-          };
-            entries.push(entry);
-            callback();
-        });
-      }
-      entries.push(total);
-
-      async.eachSeries(entries, getDirEntry, function(error) {
-        callback(error, result);
-      });
+  if(fs.lstatSync(path).isFile())
+  {
+    fs.stat(path, function(error, stats) {
+    sizes{
+        total: stats.size
+        entries: [{path, stats.size}] 
+      } 
     });
   }
+  else if(fs.lstatSync(path).isDirectory)
+  {
 
-  list(dir, callback);
-};
-
-
-
+    
+  }
 
 };
 
