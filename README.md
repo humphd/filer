@@ -1167,6 +1167,7 @@ var sh = fs.Shell();
 * [sh.rm(path, [options], callback)](#rm)
 * [sh.tempDir(callback)](#tempDir)
 * [sh.mkdirp(path, callback)](#mkdirp)
+* [sh.du(path, [options], callback)](#du)
 
 
 #### sh.cd(path, callback)<a name="cd"></a>
@@ -1373,3 +1374,17 @@ sh.mkdirp('/test/mkdirp', function(err) {
   // the root '/' now contains a directory 'test' containing the directory 'mkdirp'
 });
 ```
+#### sh.du(path, [options], callback)<a name ="du"></a>
+
+Estimates file space usage, then displays the file space allocated to each file and directory
+stemming from the current directory. 
+Links will display the size of the link file, not the size of the file being linked. 
+
+Example:
+
+```javascript
+// du called on a file (or symlink'ed file) path
+sh.du('/path/to/file', function(err, sizes) {
+  if(err) throw err;
+  // sizes is an object with a total size, and sizes for each entry:
+});
