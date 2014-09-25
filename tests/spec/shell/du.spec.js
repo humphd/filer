@@ -33,6 +33,7 @@ describe('FileSystemShell.du', function()
    var shell = util.shell();
 
 	// Example 1: du called on a file (or symlink'ed file) path
+<<<<<<< HEAD
 	fs.writeFile ('/testFile1', "13 characters", function(err){
 	if(err) throw err;
 		
@@ -41,6 +42,18 @@ describe('FileSystemShell.du', function()
 		expect(sizes.total).to.equal(13);		
 		done();			
 	  });
+=======
+	fs.writeFile ('/testFile1', "13 characters", function(err)
+	{
+		if(err) throw err;
+		
+		shell.du('/testFile1', function(err, sizes) 
+		{
+			expect(err).not.to.exist;
+			expect(sizes.total).to.equal(13);		
+			done();			
+		});
+>>>>>>> 3f5376001145c9cce8bdeef23bc1e165476055c8
 	});
   });
   it('should return 0 for an empty dir', function(done) 
@@ -48,6 +61,7 @@ describe('FileSystemShell.du', function()
     var shell = util.shell();
     var fs = util.fs();
 	
+<<<<<<< HEAD
 	fs.mkdir('/dir', 'new dir', function(err) 	{
 	  if(err) throw err;
 		
@@ -58,6 +72,19 @@ describe('FileSystemShell.du', function()
 	  expect(sizes.total).to.equal(0);
 	  done();
 	  });
+=======
+	fs.mkdir('/dir', 'new dir', function(err) 	
+	{
+		if(err) throw err;
+		
+		shell.du('/dir', function(err, sizes)
+		{
+			expect(err).not.to.exist;
+			expect(sizes).to.exist;
+			expect(sizes.total).to.equal(0);
+			done();
+		});
+>>>>>>> 3f5376001145c9cce8bdeef23bc1e165476055c8
 	});
   });
   
@@ -66,6 +93,7 @@ describe('FileSystemShell.du', function()
     var shell = util.shell();
     var fs = util.fs();
 	
+<<<<<<< HEAD
 	shell.mkdirp('/dir1/dir2', function(err) {
 	  if(err) throw err;{
 	    shell.du('/dir1', function(err, sizes){
@@ -75,6 +103,20 @@ describe('FileSystemShell.du', function()
 		  done();
 		});
 	  };
+=======
+	shell.mkdirp('/dir1/dir2', function(err) 	
+	{
+		if(err) throw err;
+		{
+			shell.du('/dir1', function(err, sizes)
+			{
+				expect(err).not.to.exist;
+				expect(sizes).to.exist;
+				expect(sizes.total).to.equal(0);
+				done();
+			});
+		};
+>>>>>>> 3f5376001145c9cce8bdeef23bc1e165476055c8
 	});
   });
   
@@ -83,6 +125,7 @@ describe('FileSystemShell.du', function()
     var shell = util.shell();
     var fs = util.fs();
 	
+<<<<<<< HEAD
 	shell.mkdirp('/dir1/dir2', function(err) {
 	  if(err) throw err;
 		
@@ -99,6 +142,24 @@ describe('FileSystemShell.du', function()
 	});
   });
   
+=======
+	shell.mkdirp('/dir1/dir2', function(err) 	
+	{
+		if(err) throw err;
+		
+		fs.writeFile ('/dir1/dir2/testFile1', "13 characters", function(err)
+		{
+			shell.du('/dir1', function(err, sizes)
+			{
+				expect(err).not.to.exist;
+				expect(sizes).to.exist;
+				expect(sizes.total).to.equal(13);
+				done();
+			});
+		});
+	});
+  });
+>>>>>>> 3f5376001145c9cce8bdeef23bc1e165476055c8
   it('should return the size of a symbolic link', function(done) 
   {
     var fs = util.fs();
