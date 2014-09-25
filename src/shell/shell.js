@@ -426,4 +426,110 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
+/**
+ * Get the file space usage of a directory
+ * and all sub directories.
+ *
+ *
+ * By default du() gives a shallow listing.
+ */
+ 
+Shell.prototype.du = function(path, options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  var sizes = {};
+  sizes.entries = [];
+  sizes.total = 0;
+  
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  callback = callback || function(){};
+
+  if(!path) {
+    callback(new Errors.EINVAL('Missing path argument'));
+    return;
+  }
+
+  function addSizeEntry(element, isDirectory) {
+    if(!isDirectory){ 
+      sizes.total += element.size;
+    }
+    sizes.entries.push(element);
+  }
+
+   function get_size_of_linked_file() {
+    fs.stat(path, function(err, stats) {
+      if(err) {
+        callback(err);
+        return;
+      }
+
+     addSizeEntry({path: path, size: stats.size});
+      callback(null, sizes);
+    });
+  }
+
+  function get_size_of_directory() {
+    var dirSize = 0;
+
+    function get_size_of_directory_entry(entryPath, callback) {
+      entryPath = Path.join(path, entryPath);
+
+      sh.du(entryPath, options, function(err, contentSizes) {
+        if(err) {
+          callback(err);
+          return;
+        }
+
+        if(contentSizes) {
+          sizes.entries = sizes.entries.concat(contentSizes.entries);
+          sizes.total += contentSizes.total;
+          dirSize += contentSizes.total;
+        }
+
+        callback();
+      });
+    }
+
+    fs.readdir(path, function(err, contents) {
+      if(err) {
+        callback(err);
+        return;
+      }
+
+      async.eachSeries(contents, get_size_of_directory_entry, function(err, contentSize) {
+        if(err) {
+          callback(err);
+          return;
+        }
+
+        addSizeEntry({path: path, size: dirSize}, true);
+        callback(null, sizes);
+      });
+    });
+  }
+
+  function get_sizes() {
+    fs.lstat(path, function(err, stats) {
+      if(err) {
+        callback(err);
+        return;
+      }
+
+      if(stats.isDirectory()) {
+        get_size_of_directory();
+        return;
+      }
+
+      addSizeEntry({path: path, size: stats.size});
+      callback(null, sizes);
+    });
+  }
+
+  get_sizes();
+};
+
 module.exports = Shell;
