@@ -40,52 +40,39 @@ describe('FileSystemShell.du', function() {
     fs.writeFile('/file', buf, function(err) {
         if(err) throw err;
         //Call du on file
-        sh.du('/file', function(err, byteCount) {
-            expect(err).not.to.exist;
-            expect(byteCount).to.equal(10);
-            done();
+        sh.du('/file', function(err, entries) {
+          expect(err).not.to.exist;
+          expect(entries.total).to.equal(10);
+          done();
         });
     });
   });
 
-  it('should do something', function(done) {
+  it('should get the correct disk usage for a directory', function(done) {
     var fs = util.fs();
     var sh = fs.Shell();
 
     var buf = new Filer.Buffer(10);
     buf.fill(6);
-    fs.writeFile('/file', function(err) {
+    fs.mkdir('/test_dir', function(err) {
       if(err) throw err;
       
-      sh.wc('/file', {bytes: true}, function(err, sizes) {
-        expect(err).not.to.exist;
-        expect(sizes.bytes).to.equal(10);
-        done();
+      fs.writeFile('/test_dir/file', buf, function(err){
+        if(err) throw err;
+        sh.du('/test_dir', function(error, entries){
+          console.log(entries.total + err + error);
+          expect(error).not.to.exist;
+          expect(entries.total).to.equal(10);
+          done();
+        });
       });
     });
   });
 
-  it('should get correct number of bytes, words, lines, characters for a file', function(done) {
+  it('should fail if the path provided does not exist', function(done) {
     var fs = util.fs();
     var sh = fs.Shell();
 
-    var file = 'She sells sea-shells on the sea-shore.\n' +
-               'The shells she sells are sea-shells, I\'m sure.\n' +
-               'For if she sells sea-shells on the sea-shore\n' +
-               'Then I\'m sure she sells sea-shore shells.';
-    
-    fs.writeFile('/file', file, function(err) {
-      if(err) throw err;
-      
-      sh.wc('/file', function(err, counts) {
-        expect(err).not.to.exist;
-        expect(counts.bytes).to.equal(172);
-        expect(counts.lines).to.equal(3);
-        expect(counts.words).to.equal(40);
-        expect(counts.characters).to.equal(172);
-        done();
-      });
-    });
   });
 
   it('should get correct number of bytes, characters for multi-byte file', function(done) {
@@ -106,15 +93,4 @@ describe('FileSystemShell.du', function() {
       });
     });
   });
-
-  it('should get error if trying to wc a dir path', function(done) {
-    var fs = util.fs();
-    var sh = fs.Shell();
-
-    sh.wc('/', {bytes: true}, function(err, counts) {
-      expect(err.code).to.equal('EISDIR');
-      done();
-    });
-  });
-
 });

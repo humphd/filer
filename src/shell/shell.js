@@ -430,19 +430,70 @@ Shell.prototype.mkdirp = function(path, callback) {
 Shell.prototype.du = function(path, callback) {
   var sh = this;
   var fs = sh.fs;
+  //Total count of bytes
+  var sizes = { 
+    total: 0,
+    entries: []
+  };
   callback = callback || function(){};
-    
+  path = path || sh.pwd();
+  
+  //Check that the path provided exists.
+  fs.exists(path, function(exists) {
+    if(!exists) {
+      callback(new Errors.EINVAL('Path not found'));
+      return;
+    }
+  });
+  
   path = Path.resolve(sh.pwd(), path);
   
-  fs.readFile(path, function(err, data) {
-    if(err){
-        return callback(err);
+  //Check if path given is a file or directory
+  fs.stat(path, function(err, stats){
+    if(err) {
+      callback(new Errors.EINVAL(null, path));
     }
     
-    var byteCount = data.length;
-      
-    callback(null, byteCount);
-  });
+    if(stats.isDirectory()) { 
+      //Get a listing of the items in the directory
+      //Should this be done with sh.ls()? or fs.readdir()?
+      sh.ls(path, function(err, entries) {
+        if(err) throw err;
+        var i;
+        //call du recursively on each sub directory at path
+        for(i = 0; i < entries.length; i += 1) {
+          if(entries[i].type === 'DIRECTORY') {
+            sh.du(entries[i].path, function(err, counts) {
+              if(err) throw err;
+              sizes.total += counts.total;
+            });
+          }
+          else {
+            fs.readFile(Path.resolve(path, entries[i].path), function(err, data) {
+              if(err){
+                console.log(err);
+                callback(err);
+              }
+              console.log(path);
+              sizes.total += data.length;
+              sizes.entries.push(path, data.length); 
+              callback(null, sizes);
+            });
+          }
+        }
+      });
+    }
+    else {
+      fs.readFile(path, function(err, data) {
+        if(err){
+          return callback(err);
+        } 
+        sizes.total += data.length;
+        sizes.entries.push(path, data.length); 
+        callback(null, sizes);
+      });
+    }
+  });             
 };
 
 module.exports = Shell;
