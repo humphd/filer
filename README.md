@@ -1296,7 +1296,7 @@ sh.du('/dir', { unit: true }, function(err, sizes) {
   // sizes is an array with one element per child-entry, the file's path and size:
   // sizes is an object with a total size, and sizes for each entry:
   // {
-  //    total: '1.005 KB',
+  //    total: '1 KB',
   //    entries: [
   //      {'/dir/dir2/file3', '1 KB'},
   //      {'/dir/dir2', '0 Bytes'},
