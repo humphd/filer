@@ -426,4 +426,7 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
+Shell.prototype.du = function(path, callback) {
+  callback();
+};
 module.exports = Shell;
