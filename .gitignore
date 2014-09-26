@@ -4,3 +4,4 @@ bower_components
 *~
 dist/filer-test.js
 dist/filer-issue225.js
+.DS_Store
