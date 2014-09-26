@@ -11,7 +11,7 @@ describe('FileSystemShell.du', function() {
     expect(shell.du).to.be.a('function');
   });
   
-  it('should return an error if the file does not exist', function(done) {
+  it('should return an error if the path does not exist', function(done) {
     var fs = util.fs();
     var shell = fs.Shell();
 
