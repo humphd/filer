@@ -5828,7 +5828,6 @@ Shell.prototype.ls = function(dir, options, callback) {
             return;
           }
           var entry = {
-            fullpath: name,
             path: Path.basename(name),
             links: stats.nlinks,
             size: stats.size,
@@ -5868,10 +5867,16 @@ Shell.prototype.ls = function(dir, options, callback) {
  * and returning an array of file entries in the following form:
  *
  * {
- *   total:<Number>  the total sizes of all nodes
+ *   total:<Number> the total size of all nodes if option.unit is set to false, or
+ *         <String> the total size of all nodes if option.unit is set to true
  *   entries:<Array> an array contains all entries and their size
  *   [
- *      {[node path]<String>, [size]<Number>},
+ *      {
+          path:<String> the node's path, 
+          size:<Number> the size of each node if option.unit is set to false, or
+ *             <String> the total size of each node if option.unit is set to true
+        },
+         ...
  *   ]
  * }
  *

@@ -1238,17 +1238,27 @@ sh.ls('/dir', { recursive: true }, function(err, entries) {
 
 #### sh.du(dir, [options], callback)<a name="du"></a>
 
-Get the size of a file or directory, returning an array of directory entries
-in the following form:
-```
+Visit all the nodes of a directory recursively, reporting their 
+size property in bytes, or a human-readable unit (K, M, G)
+and returning an array of file entries in the following form:
+
 {
-  path: <String> the basename of the directory entry
-  links: <Number> the number of links to the entry
-  size: <Number> the size in bytes of the entry
-  modified: <Number> the last modified date/time
-  type: <String> the type of the entry
-  contents: <Array> an optional array of child entries, if this entry is itself a directory
+    total:<Number> the total size of all nodes if option.unit is set to false, or
+          <String> the total size of all nodes if option.unit is set to true
+    entries:<Array> an array contains all entries and their size
+    [
+       {
+          path:<String> the node's path, 
+          size:<Number> the size of each node if option.unit is set to false, or
+              <String> the total size of each node if option.unit is set to true
+        },
+         ...
+    ]
 }
+
+By default du() returns a total size and each path's size in bytes,
+If you want to report sizes in a human-readable unit (K, M, G), use
+the `unit=true` option.
 ```
 
 By default `sh.du()` gives a shallow listing. If you want to follow
@@ -1268,18 +1278,32 @@ Example:
  *   file3
  */
 
-// Shallow listing
-sh.du('/dir', function(err, entries) {
+// Default size formatting
+sh.du('/dir/dir2/file3', function(err, sizes) {
   if(err) throw err;
-  // entries is now an array of 3 file/dir entries under /dir
+  // sizes is an object with a total size, and sizes for each entry:
+  // {
+  //    total: 1024,
+  //    entries: [
+  //      {'/dir/dir2/file3', 1024}
+  //    ]
+  // }
 });
 
-// Deep listing
-sh.du('/dir', { recursive: true }, function(err, entries) {
+// Human-readable unit (K, M, G) size formatting
+sh.du('/dir', { unit: true }, function(err, sizes) {
   if(err) throw err;
-  // entries is now an array of 3 file/dir entries under /dir.
-  // The entry object for '/dir2' also includes a `contents` property,
-  // which is an array of 1 entry element for `file3`.
+  // sizes is an array with one element per child-entry, the file's path and size:
+  // sizes is an object with a total size, and sizes for each entry:
+  // {
+  //    total: '1.005 KB',
+  //    entries: [
+  //      {'/dir/dir2/file3', '1 KB'},
+  //      {'/dir/dir2', '0 Bytes'},
+  //      {'/dir/file1', '2 Bytes'},  
+  //      {'/dir/file2', '3 Bytes'}
+  //    ]
+  // }
 });
 ```
 

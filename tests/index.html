@@ -53,7 +53,12 @@
       if (err) throw err;
       console.log('stats: ' + JSON.stringify(stats));
     });
-
+    //default fomartting of sizes
+    sh.du('/test-dir',function(err, sizes) {
+        if(err) throw err;  
+        console.log(JSON.stringify(sizes));
+    });
+    //readable fomartting of sizes
     sh.du('/', { unit:true },function(err, sizes) {
         if(err) throw err;  
         console.log(JSON.stringify(sizes));
