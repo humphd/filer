@@ -209,12 +209,12 @@ Shell.prototype.du = function(path, options, callback) {
             callback(null, sizes);
           });
         }
-        else
-        {
-          callback(new Errors.ENOENT('Path does not exist'));
-          return;
-        }
       });
+    }
+    else
+    {
+      callback(new Errors.ENOENT('Path does not exist'));
+      return;
     }
   });
 };
