@@ -23,16 +23,24 @@ describe('FileSystemShell.du', function() {
     });
   });
 
-  /* Not yet implemented
-  it('should return an error if the path does not exist', function(done) {
-    var fs = util.fs();
+ it('should return the size of a file', function(done) {
+   var fs = util.fs();
+   var shell = fs.Shell();
 
-    fs.du('/tmp/mydir', function(error, files) {
-      expect(error).to.exist;
-      expect(error.code).to.equal("ENOENT");
-      expect(files).not.to.exist;
-      done();
-    });
-  });
-  */
+   var expected = [{path: '/nonexistantfile', size: 11}];
+
+   fs.writeFile('/nonexistantfile', 'Hello World', function(err) {
+     if(err) throw err;
+
+     shell.du('/nonexistantfile', function(err, sizes) {
+       expect(err).not.to.exist;
+       expect(sizes.entries).to.deep.equal(expected);
+       expect(sizes.total).to.equal(11);
+       done();
+     });
+   });
+ });
+
+
 });
+

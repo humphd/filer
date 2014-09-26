@@ -151,27 +151,21 @@ Shell.prototype.touch = function(path, options, callback) {
 /**
  * Gives the usage of a file or directory in the file sytem.
  */
-Shell.prototype.du = function(path, options, callback) {
+Shell.prototype.du = function(path, callback) {
   var sh = this;
   var fs = sh.fs;
   var sizes = {};
+  sizes.entries = [];
+  sizes.total = 0;
   var conversion = 1;
 
   callback = callback || function(){};
+
 
   if(!path) {
     callback(new Errors.EINVAL('Missing path argument'));
     return;
   }
-
-  // Provides division values for options
-  if(options.format && typeof options.format === 'string') {
-     switch(options.format.toLowerCase()) {
-     case 'kb': conversion = 1000; break;
-     case 'mb': conversion = 1000000; break;
-     case 'gb': conversion = 1000000000; break;
-     }
-   }
 
    //Adds element into sizes
    function addSizeEntry(entryPath, entrySize) {
@@ -179,7 +173,6 @@ Shell.prototype.du = function(path, options, callback) {
       path:entryPath, 
       size:entrySize
     }
-    element.size /= division;
     sizes.total += element.size;
     
     sizes.entries.push(element);
