@@ -155,6 +155,7 @@ Shell.prototype.du = function(path, callback) {
   var sh = this;
   var fs = sh.fs;
   var sizes = {};
+  var conversion = 1;
 
   callback = callback || function(){};
 
@@ -163,30 +164,56 @@ Shell.prototype.du = function(path, callback) {
     return;
   }
 
-  path.exists(path, function(exists) { 
-  if (exists) {
-    fs.stat(path, function (error, stat) {
-      if(stat.isFile())
-      {
-        sizes{
-            total: stat.size
-            entries: [{path.toString(): stat.size}] 
-          } 
-      }
-      else if(stat.isDirectory())
-      {
-        //Do this if it's a directory
+  // Provides division values for options
+  if(options.format && typeof options.format === 'string') {
+     switch(options.format.toLowerCase()) {
+     case 'kb': conversion = 1000; break;
+     case 'mb': conversion = 1000000; break;
+     case 'gb': conversion = 1000000000; break;
+     }
+   }
 
-      }
+   //Adds element into sizes
+   function addSizeEntry(entryPath, entrySize) {
+    element{
+      path:entryPath, 
+      size:entrySize
     }
-    else
-    {
-      callback(new Errors.ENOENT('Path does not exist'));
-      return;
-    }  
-  }); 
+      element.size /= division;
+      sizes.total += element.size;
+    }
+    sizes.entries.push(element);
+  }
 
+  path.exists(path, function(exists) { 
+    if (exists) {
+      fs.stat(path, function (error, stat) {
+        if(stat.isFile())
+        {
+          addSizeEntry(path, stat.size);
+        }
+        else if(stat.isDirectory())
+        {
+          var dirTotal = 0;
+          fs.readdir(path, function(error, dirContents){
+            async.eachSeries(dirContents, content, function(err, contentSize) {
+              
+              sh.du(content, function(error, contentSize){
+                dirTotal += contentSize.total;
+              });
+            });
+            addSizeEntry(path, dirTotal);
+            callback(null, sizes);
+          });
+      }
+      else
+      {
+        callback(new Errors.ENOENT('Path does not exist'));
+        return;
+      }  
+    }); 
   });
+
 };
 
 /**
