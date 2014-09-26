@@ -30,7 +30,7 @@ describe('FileSystemShell.du', function() {
    var expected = [{path: '/nonexistantfile', size: 11}];
 
    fs.writeFile('/nonexistantfile', 'Hello World', function(err) {
-     if(err) throw err;
+     
 
      shell.du('/nonexistantfile', function(err, sizes) {
        expect(err).not.to.exist;
@@ -39,6 +39,27 @@ describe('FileSystemShell.du', function() {
        done();
      });
    });
+ });
+
+ it('should return the size directory', function(done) {
+ var fs = util.fs();
+ var shell = fs.Shell();
+ var expectedResult = [{path: '/dir1/file1', size: 11},
+ {path: '/dir1', size: 11}];
+
+ fs.mkdir('/dir1', function(err) {
+ 
+ fs.writeFile('/dir1/file1', 'Hello World', function(err) {
+
+ shell.du('/dir1', function(err, sizes) {
+ expect(err).not.to.exist;
+ expect(sizes).to.exist;
+ expect(sizes.entries).to.deep.equal(expectedResult);
+ expect(sizes.total).to.equal(15);
+ done();
+  });
+});
+ });
  });
 
 

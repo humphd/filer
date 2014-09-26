@@ -188,19 +188,25 @@ Shell.prototype.du = function(path, callback) {
         }
         else if(stat.isDirectory())
         {
+
           var dirTotal = 0;
+
           fs.readdir(path, function(error, dirContents){
-            async.eachSeries(dirContents, content, function(err, contentSize) {
-              
-              sh.du(content, function(error, contentSize){
+            async.eachSeries(dirContents, function(error, callback){
+
+              sh.du(dirContents, function(error, contentSize){
                 dirTotal += contentSize.total;
                 callback(error);
               });
-              callback(error);
+
+            }, function(error, contentSize) {
+              
+              
+              addSizeEntry(path, dirTotal);
+              callback(null, sizes);
             });
-            addSizeEntry(path, dirTotal);
-            callback(null, sizes);
           });
+
         }
       });
     }
