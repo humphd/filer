@@ -151,7 +151,7 @@ Shell.prototype.touch = function(path, options, callback) {
 /**
  * Gives the usage of a file or directory in the file sytem.
  */
-Shell.prototype.du = function(path, callback) {
+Shell.prototype.du = function(path, options, callback) {
   var sh = this;
   var fs = sh.fs;
   var sizes = {};
