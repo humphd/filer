@@ -12,7 +12,8 @@ describe('FileSystemShell.du', function() {
   });
   
   it('should return an error if the file does not exist', function(done) {
-    var shell = util.fs();
+    var fs = util.fs();
+    var shell = fs.Shell();
 
     shell.du('/tmp/myfile.txt', function(error, sizes) {
       expect(error).to.exist;

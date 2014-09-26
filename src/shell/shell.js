@@ -185,12 +185,13 @@ Shell.prototype.du = function(path, options, callback) {
     sizes.entries.push(element);
   }
 
-  path.exists(path, function(exists) { 
+  fs.exists(path, function(exists){ 
     if (exists) {
       fs.stat(path, function (error, stat) {
         if(stat.isFile())
         {
           addSizeEntry(path, stat.size);
+          callback(null, sizes);
         }
         else if(stat.isDirectory())
         {
@@ -200,7 +201,9 @@ Shell.prototype.du = function(path, options, callback) {
               
               sh.du(content, function(error, contentSize){
                 dirTotal += contentSize.total;
+                callback(error);
               });
+              callback(error);
             });
             addSizeEntry(path, dirTotal);
             callback(null, sizes);
