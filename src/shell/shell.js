@@ -175,13 +175,13 @@ Shell.prototype.du = function(path, callback) {
 
    //Adds element into sizes
    function addSizeEntry(entryPath, entrySize) {
-    element{
+    var element = {
       path:entryPath, 
       size:entrySize
     }
-      element.size /= division;
-      sizes.total += element.size;
-    }
+    element.size /= division;
+    sizes.total += element.size;
+    
     sizes.entries.push(element);
   }
 
@@ -205,15 +205,15 @@ Shell.prototype.du = function(path, callback) {
             addSizeEntry(path, dirTotal);
             callback(null, sizes);
           });
-      }
-      else
-      {
-        callback(new Errors.ENOENT('Path does not exist'));
-        return;
-      }  
-    }); 
+        }
+        else
+        {
+          callback(new Errors.ENOENT('Path does not exist'));
+          return;
+        }
+      });
+    }
   });
-
 };
 
 /**
