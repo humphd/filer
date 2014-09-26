@@ -51,6 +51,7 @@ require("./spec/shell/touch.spec");
 require("./spec/shell/exec.spec");
 require("./spec/shell/cat.spec");
 require("./spec/shell/ls.spec");
+require("./spec/shell/du.spec");
 require("./spec/shell/rm.spec");
 require("./spec/shell/env.spec");
 require("./spec/shell/mkdirp.spec");

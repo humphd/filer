@@ -5828,6 +5828,7 @@ Shell.prototype.ls = function(dir, options, callback) {
             return;
           }
           var entry = {
+            fullpath: name,
             path: Path.basename(name),
             links: stats.nlinks,
             size: stats.size,
@@ -5859,6 +5860,117 @@ Shell.prototype.ls = function(dir, options, callback) {
   }
 
   list(dir, callback);
+};
+
+/**
+ * Visit all the nodes of a directory recursively, reporting their 
+ * size property in bytes, or a human-readable unit (K, M, G)
+ * and returning an array of file entries in the following form:
+ *
+ * {
+ *   total:<Number>  the total sizes of all nodes
+ *   entries:<Array> an array contains all entries and their size
+ *   [
+ *      {[node path]<String>, [size]<Number>},
+ *   ]
+ * }
+ *
+ * By default du() returns a total size and each path's size in bytes,
+ * If you want to report sizes in a human-readable unit (K, M, G), use
+ * the `unit=true` option.
+ */
+Shell.prototype.du = function(dir, options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  var i=0;
+  var result = {total:0,entries:[]};
+
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  callback = callback || function(){};
+  if(!dir) {
+    callback(new Errors.EINVAL('Missing dir argument'));
+    return;
+  }
+
+  function sizeConvert(bytes)
+  {
+     var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+     if (bytes == 0) return '0 Byte';
+     var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+     return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+  }
+
+  function fileSpaceUsage(path, callback) {
+    var pathname = Path.resolve(sh.pwd(), path);
+    
+    fs.readdir(pathname, function(error, entries) {
+      if(error && error.code==='ENOTDIR'){
+        fs.stat(pathname, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+          
+          var entry = {
+            path: pathname,
+            size: options.unit ? sizeConvert(stats.size) : stats.size
+          };
+          result.total = stats.size;
+          result.entries.push(entry);
+          callback(null, result);
+        });
+        return;
+      }
+      else if(error) {
+        callback(error);
+        return;        
+      }
+      
+      function getDirEntry(name, callback) {
+        name = Path.join(pathname, name);      
+        fs.stat(name, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+          var entry = {
+            path: name,
+            size: options.unit ? sizeConvert(stats.size) : stats.size
+          };
+         
+          if(stats.type === 'DIRECTORY') {
+            fileSpaceUsage(Path.join(pathname, Path.basename(name)), function(error, items) {
+              if(error) {
+                callback(error);
+                return;
+              }
+              result.total += stats.size;
+              result.entries.push(entry);
+              callback();
+            });
+          }
+          else {
+            result.total += stats.size;
+            result.entries.push(entry);
+            callback();
+          }
+        });
+      }
+
+      async.eachSeries(entries, getDirEntry, function(error) {
+        callback(error, result);
+      });
+    });    
+  }
+
+  fileSpaceUsage(dir, function(err, sizes) {
+    result.total = options.unit ? sizeConvert(result.total) : result.total;
+    callback(err, sizes);
+  });  
 };
 
 /**

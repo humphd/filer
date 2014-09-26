@@ -1161,6 +1161,7 @@ var sh = fs.Shell();
 * [sh.cd(path, callback)](#cd)
 * [sh.pwd()](#pwd)
 * [sh.ls(dir, [options], callback)](#ls)
+* [sh.du(dir, [options], callback)](#du)
 * [sh.exec(path, [args], callback)](#exec)
 * [sh.touch(path, [options], callback)](#touch)
 * [sh.cat(files, callback)](#cat)
@@ -1228,6 +1229,53 @@ sh.ls('/dir', function(err, entries) {
 
 // Deep listing
 sh.ls('/dir', { recursive: true }, function(err, entries) {
+  if(err) throw err;
+  // entries is now an array of 3 file/dir entries under /dir.
+  // The entry object for '/dir2' also includes a `contents` property,
+  // which is an array of 1 entry element for `file3`.
+});
+```
+
+#### sh.du(dir, [options], callback)<a name="du"></a>
+
+Get the size of a file or directory, returning an array of directory entries
+in the following form:
+```
+{
+  path: <String> the basename of the directory entry
+  links: <Number> the number of links to the entry
+  size: <Number> the size in bytes of the entry
+  modified: <Number> the last modified date/time
+  type: <String> the type of the entry
+  contents: <Array> an optional array of child entries, if this entry is itself a directory
+}
+```
+
+By default `sh.du()` gives a shallow listing. If you want to follow
+directories as they are encountered, use the `recursive=true` option. NOTE:
+you should not count on the order of the returned entries always being the same.
+
+Example:
+
+```javascript
+/**
+ * Given a dir structure of:
+ *
+ * /dir
+ *  file1
+ *  file2
+ *  dir2/
+ *   file3
+ */
+
+// Shallow listing
+sh.du('/dir', function(err, entries) {
+  if(err) throw err;
+  // entries is now an array of 3 file/dir entries under /dir
+});
+
+// Deep listing
+sh.du('/dir', { recursive: true }, function(err, entries) {
   if(err) throw err;
   // entries is now an array of 3 file/dir entries under /dir.
   // The entry object for '/dir2' also includes a `contents` property,

@@ -2,18 +2,72 @@
 <head>
   <meta charset="utf-8">
   <title>Mocha Tests</title>
-  <link rel="stylesheet" href="../bower_components/mocha/mocha.css" />
-  <script src="../bower_components/chai/chai.js"></script>
-  <script src="../bower_components/mocha/mocha.js"></script>
+   <!--<link rel="stylesheet" href="../bower_components/mocha/mocha.css" />  
+  
+ <script src="../bower_components/chai/chai.js"></script>
+  <script src="../bower_components/mocha/mocha.js"></script>*-->
+  <script src="../dist/filer.js"></script>
+  
   <script>
-    mocha.setup('bdd').timeout(5000).slow(250);;
+    /**
+      -dir
+        |-dir2
+           |-file0
+        |-file1
+        |-file2
+      */
+    var fs = new Filer.FileSystem();
+    var sh = fs.Shell();
+    var contents1 = "abcdef";
+    var contents2 = "1";
+    var contents3 = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+    
+    //Test if the file exists
+    dirExists('/test-dir', function (exists) {
+      console.log(exists ? "file exists" : "file not found");
+      if (exists){
+        fs.rmdir('/test-dir');
+      }
+      fs.mkdir('/test-dir', function(err) {
+        if(err) throw err;
 
-    window.onload = function() {
-      mocha.checkLeaks();
-      mocha.run();
+        fs.mkdir('/test-dir/test-dir2', function(err) {
+          if(err) throw err;
+
+          fs.writeFile('/test-dir/test-dir2/file0', contents3, function(err) {
+            if(err) throw err;
+
+            fs.writeFile('/test-dir/file1', contents1, function(err) {
+              if(err) throw err;
+
+              fs.writeFile('/test-dir/file2', contents1, function(err) {
+                if(err) throw err;
+              });
+            });
+          });
+         });
+      });    
+    });
+    
+    fs.stat('/test-dir/test-dir2/file0', function(err, stats) {
+      if (err) throw err;
+      console.log('stats: ' + JSON.stringify(stats));
+    });
+
+    sh.du('/', { unit:true },function(err, sizes) {
+        if(err) throw err;  
+        console.log(JSON.stringify(sizes));
+    });
+ 
+    // Check if a directory exists
+    function dirExists(path, callback) {
+      fs.stat(path, function(err, stats) {
+        if(err) return callback(err);
+        var exists = stats.type === "DIRECTORY";
+        callback(null, exists);
+      });
     };
   </script>
-  <script src="../dist/filer-test.js"></script>
  </head>
 <body>
   <div id="mocha"></div>

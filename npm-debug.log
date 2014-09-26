@@ -1,0 +1,101 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/bin/nodejs', '/usr/bin/npm', 'install' ]
+2 info using npm@1.3.10
+3 info using node@v0.10.25
+4 verbose readDependencies using package.json deps
+5 verbose install where, deps [ '/home/calla/osd600/filer',
+5 verbose install   [ 'bower',
+5 verbose install     'base64-arraybuffer',
+5 verbose install     'chai',
+5 verbose install     'grunt',
+5 verbose install     'grunt-browserify',
+5 verbose install     'grunt-bump',
+5 verbose install     'grunt-contrib-clean',
+5 verbose install     'grunt-contrib-compress',
+5 verbose install     'grunt-contrib-concat',
+5 verbose install     'grunt-contrib-connect',
+5 verbose install     'grunt-contrib-jshint',
+5 verbose install     'grunt-contrib-uglify',
+5 verbose install     'grunt-contrib-watch',
+5 verbose install     'grunt-git',
+5 verbose install     'grunt-npm',
+5 verbose install     'grunt-prompt',
+5 verbose install     'grunt-shell',
+5 verbose install     'habitat',
+5 verbose install     'mocha',
+5 verbose install     'semver',
+5 verbose install     'requirejs' ] ]
+6 info preinstall filer@0.0.28
+7 verbose readDependencies using package.json deps
+8 verbose already installed skipping grunt-browserify@^2.1.0 /home/calla/osd600/filer
+9 verbose already installed skipping chai@~1.9.1 /home/calla/osd600/filer
+10 verbose already installed skipping grunt-bump@0.0.13 /home/calla/osd600/filer
+11 verbose already installed skipping grunt@~0.4.0 /home/calla/osd600/filer
+12 verbose already installed skipping grunt-contrib-clean@~0.4.0 /home/calla/osd600/filer
+13 verbose already installed skipping grunt-contrib-compress@~0.4.1 /home/calla/osd600/filer
+14 verbose already installed skipping grunt-contrib-concat@~0.1.3 /home/calla/osd600/filer
+15 verbose already installed skipping grunt-contrib-connect@^0.7.1 /home/calla/osd600/filer
+16 verbose already installed skipping grunt-contrib-jshint@~0.7.1 /home/calla/osd600/filer
+17 verbose already installed skipping grunt-contrib-uglify@~0.1.2 /home/calla/osd600/filer
+18 verbose already installed skipping grunt-contrib-watch@~0.3.1 /home/calla/osd600/filer
+19 verbose already installed skipping grunt-git@0.2.10 /home/calla/osd600/filer
+20 verbose cache add [ 'grunt-npm@git://github.com/sedge/grunt-npm.git#branchcheck',
+20 verbose cache add   null ]
+21 verbose cache add name=undefined spec="grunt-npm@git://github.com/sedge/grunt-npm.git#branchcheck" args=["grunt-npm@git://github.com/sedge/grunt-npm.git#branchcheck",null]
+22 verbose parsed url { protocol: null,
+22 verbose parsed url   slashes: null,
+22 verbose parsed url   auth: null,
+22 verbose parsed url   host: null,
+22 verbose parsed url   port: null,
+22 verbose parsed url   hostname: null,
+22 verbose parsed url   hash: '#branchcheck',
+22 verbose parsed url   search: null,
+22 verbose parsed url   query: null,
+22 verbose parsed url   pathname: 'grunt-npm@git://github.com/sedge/grunt-npm.git',
+22 verbose parsed url   path: 'grunt-npm@git://github.com/sedge/grunt-npm.git',
+22 verbose parsed url   href: 'grunt-npm@git://github.com/sedge/grunt-npm.git#branchcheck' }
+23 verbose cache add name="grunt-npm" spec="git://github.com/sedge/grunt-npm.git#branchcheck" args=["grunt-npm","git://github.com/sedge/grunt-npm.git#branchcheck"]
+24 verbose parsed url { protocol: 'git:',
+24 verbose parsed url   slashes: true,
+24 verbose parsed url   auth: null,
+24 verbose parsed url   host: 'github.com',
+24 verbose parsed url   port: null,
+24 verbose parsed url   hostname: 'github.com',
+24 verbose parsed url   hash: '#branchcheck',
+24 verbose parsed url   search: null,
+24 verbose parsed url   query: null,
+24 verbose parsed url   pathname: '/sedge/grunt-npm.git',
+24 verbose parsed url   path: '/sedge/grunt-npm.git',
+24 verbose parsed url   href: 'git://github.com/sedge/grunt-npm.git#branchcheck' }
+25 verbose already installed skipping grunt-prompt@^1.1.0 /home/calla/osd600/filer
+26 verbose already installed skipping grunt-shell@~0.7.0 /home/calla/osd600/filer
+27 verbose already installed skipping habitat@^1.1.0 /home/calla/osd600/filer
+28 verbose already installed skipping mocha@~1.18.2 /home/calla/osd600/filer
+29 verbose already installed skipping semver@^2.3.0 /home/calla/osd600/filer
+30 verbose already installed skipping requirejs@^2.1.14 /home/calla/osd600/filer
+31 silly lockFile a5f9b92d--sedge-grunt-npm-git-branchcheck git://github.com/sedge/grunt-npm.git#branchcheck
+32 verbose lock git://github.com/sedge/grunt-npm.git#branchcheck /home/calla/.npm/a5f9b92d--sedge-grunt-npm-git-branchcheck.lock
+33 verbose already installed skipping bower@~1.3.8 /home/calla/osd600/filer
+34 verbose already installed skipping base64-arraybuffer@^0.1.2 /home/calla/osd600/filer
+35 verbose addRemoteGit [ 'git://github.com/sedge/grunt-npm.git', 'branchcheck' ]
+36 verbose git remote.origin.url git://github.com/sedge/grunt-npm.git
+37 error git fetch -a origin (git://github.com/sedge/grunt-npm.git) error: cannot open FETCH_HEAD: Permission denied
+38 silly lockFile f6c9d3a0-t-github-com-sedge-grunt-npm-git git://github.com/sedge/grunt-npm.git
+39 error Error: Command failed: error: cannot open FETCH_HEAD: Permission denied
+39 error
+39 error
+39 error     at ChildProcess.exithandler (child_process.js:637:15)
+39 error     at ChildProcess.EventEmitter.emit (events.js:98:17)
+39 error     at maybeClose (child_process.js:743:16)
+39 error     at Process.ChildProcess._handle.onexit (child_process.js:810:5)
+40 error If you need help, you may report this log at:
+40 error     <http://github.com/isaacs/npm/issues>
+40 error or email it to:
+40 error     <npm-@googlegroups.com>
+41 error System Linux 3.13.0-32-generic
+42 error command "/usr/bin/nodejs" "/usr/bin/npm" "install"
+43 error cwd /home/calla/osd600/filer
+44 error node -v v0.10.25
+45 error npm -v 1.3.10
+46 error code 1
+47 verbose exit [ 1, true ]
