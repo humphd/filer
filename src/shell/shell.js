@@ -518,7 +518,6 @@ Shell.prototype.du = function(dir, options, callback) {
                 }; 
                 result.push(entry)
                 sizes.results = result.concat();
-                console.log("ASYNC PATH:::" + entry.path)
             }
             callback(error, sizes);
           });
