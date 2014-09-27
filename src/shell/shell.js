@@ -437,76 +437,98 @@ Shell.prototype.du = function(dir, options, callback) {
   options = options || {};
   callback = callback || function(){};
 
-  if(!dir) {
-    callback(new Errors.EINVAL('Missing dir argument'));
-    return;
-  }
-
-    
-  function diskusage(path, callback) {
+  function diskusage(path, callback) { 
     var pathname = Path.resolve(sh.pwd(), path);
     var result = [];
-    var sizes = {};
-    fs.readdir(pathname, function(error, entries) {
-      if(error) {
-        callback(error); 
-        return;
-      }
-
-      function getDirEntry(name, callback) {
-        name = Path.join(pathname, name);
-        fs.stat(name, function(error, stats) {
-          if(error) {
+    var sizes = {
+        totalsize:0,
+        results: path,
+    };
+    
+    fs.stat(pathname, function(error, stats) { 
+        if(error) {
             callback(error);
             return;
-          }
-          var entry = {
-            //path: Path.basename(name),
-            path :  Path.join(path, Path.basename(name)),
-            size: stats.size,
-            type: stats.type, 
-          };
-          totsize += stats.size; 
-        
-          if(stats.type === 'DIRECTORY') {
-            diskusage(entry.path, function(error, items) {
-            //diskusage(Path.join(pathname, entry.path), function(error, items) {
-           // console.log(entry.path)
+        }
+        if(stats.type === 'FILE'){ 
+            var entry = {
+                size: stats.size,
+                type: stats.type, 
+                path:pathname,
+              };
+            result.push(entry);
+            sizes.totalsize = entry.size;
+            sizes.results = result.concat();
+            callback(error, sizes);    
+            return;
+        }
+    else {
+        fs.readdir(pathname, function(error, entries) { 
+          if(error) {
+            callback(error); 
+            return;
+          } 
+
+          function getDirEntry(name, callback) { 
+            name = Path.join(pathname, name); 
+            fs.stat(name, function(error, stats) {
               if(error) {
                 callback(error);
                 return;
               }
-                //contains path file3 record entry.contents = items.results;
-              //entry.contents = items.results;
-               //console.log(entry)  //contain dir 
-              result.push(entry);
-              if(items.results.length > 0){
-                  items.results.forEach(function(entry2) {
-                    result.push(entry2);
-                  });
+              
+              var entry = {
+                size: stats.size,
+                type: stats.type, 
+                  path: name,
+              }; 
+              totsize += stats.size; 
+              if(stats.type === 'DIRECTORY') { 
+                diskusage(entry.path, function(error, items) { 
+                  if(error) {
+                    callback(error);
+                    return;
+                  }
+
+                  result.push(entry);
+                  if(items.results.length > 0){
+                      items.results.forEach(function(entry2) {
+                        result.push(entry2);
+                      });
+                  }
+                  callback();
+                });
+              } else {
+                result.push(entry);
+                callback();
               }
-              callback();
+
             });
-          } else {
-            //console.log(entry)  
-            result.push(entry);
-            callback();
           }
-            
-        });
+
+          async.eachSeries(entries, getDirEntry, function(error) {
+            if (result.length > 0) {
+                sizes.totalsize = totsize;
+                sizes.results = result.concat();
+            }
+            else{ 
+                var entry = {
+                    size: 0,
+                    path: pathname,
+                }; 
+                result.push(entry)
+                sizes.results = result.concat();
+                console.log("ASYNC PATH:::" + entry.path)
+            }
+            callback(error, sizes);
+          });
+        }); 
       }
-      
-      async.eachSeries(entries, getDirEntry, function(error) {
-        sizes.totalsize = totsize;
-        sizes.results = result.concat();
-        console.log(result);
-        callback(error, sizes);
-      });
     });
   }
-
+    
   diskusage(dir, callback);
-
+  
 };
 
 module.exports = Shell;
