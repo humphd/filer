@@ -267,6 +267,90 @@ Shell.prototype.ls = function(dir, options, callback) {
 };
 
 /**
+ * Get the disk usage of a directory or a file, returning an object of
+ * entries in the following form:
+ *
+ * {  
+ *    total:<number> the total size in bytes of a directory,
+ *    [
+ *     {
+ *      path: <String> the basename of the directory entry,
+ *      size: <Number> the size in bytes of the entry
+ *     },
+ *      ...
+ *    ]
+ * }
+ *
+ * By default du() display the file space allocated to each file and 
+ * directory contained in the current directory.
+ * 
+ */
+Shell.prototype.du = function(dir,options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  callback = callback || function(){};
+
+  if(!dir) {
+    callback(new Errors.EINVAL('Missing dir argument'));
+    return;
+  }
+  var result = { 
+                  total   : 0,
+                  entries : []
+                };
+  function list(path, callback) {
+    var pathname = Path.resolve(sh.pwd(), path);
+    fs.readdir(pathname, function(error, entries) {
+      if(error) {
+        callback(error);
+        return;
+      }
+
+      function getSize(name, callback) {
+        name = Path.join(pathname, name);
+        fs.stat(name, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+          var entry = {
+            path: Path.basename(name),
+            size: stats.size
+          };
+          
+          if(stats.type === 'DIRECTORY') {
+            list(Path.join(pathname, entry.path), function(error, items) {
+              if(error) {
+                callback(error);
+                return;
+              }
+              result.total +=  entry.size;
+              result.entries.push(entry);
+              callback();
+            });
+          } else {
+            result.total += stats.size;
+            result.entries.push(entry);
+            callback();
+          }
+        });
+      }
+
+      async.eachSeries(entries, getSize, function(error) {
+        callback(error, result);
+      });
+    });
+  }
+
+  list(dir, callback);
+};
+
+/**
  * Removes the file or directory at `path`. If `path` is a file
  * it will be removed. If `path` is a directory, it will be
  * removed if it is empty, otherwise the callback will receive

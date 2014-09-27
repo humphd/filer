@@ -1380,8 +1380,14 @@ Estimate file space usage—space used under a particular directory or files on 
 file system:
 ```
 {
-  size: <Number> the size in bytes of the file
-  path: <String> the file directory
+  total: <Number> total size of the searched file or directory,
+  [
+    {
+      size: <Number> the size in bytes of the file
+      path: <String> the file or directory path
+    },
+    ...
+  ]
 }
 ```
 
@@ -1399,10 +1405,10 @@ Example:
  * Given a dir structure of:
  *
  * /dir
- *  file1
- *  file2
- *  dir2/
- *   file3
+ *    file1
+ *    file2
+ *    dir2/
+ *        file3
  */
 
 // List the disk usage of dir directory only
