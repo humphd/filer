@@ -178,35 +178,49 @@ Shell.prototype.du = function(path, callback) {
     sizes.entries.push(element);
   }
 
+
+
+
   fs.exists(path, function(exists){ 
     if (exists) {
       fs.stat(path, function (error, stat) {
+
         if(stat.isFile())
         {
           addSizeEntry(path, stat.size);
           callback(null, sizes);
+          return;
         }
         else if(stat.isDirectory())
         {
-
-          var dirTotal = 0;
-
-          fs.readdir(path, function(error, dirContents){
-            async.eachSeries(dirContents, function(error, callback){
-
-              sh.du(dirContents, function(error, contentSize){
-                dirTotal += contentSize.total;
-                callback(error);
+          fs.readdir(path, function(error, contents){
+            if(contents.length > 0)
+            {
+              var dirSize = 0;
+              
+              function entry_size(recievedPath, dirSize){
+                  dirPath = Path.join(path, recievedPath);
+                  sh.du(recievedPath, function(error, contentSize){
+                    dirSize += contentSize.total;
+                    sizes.entries = sizes.entries.concat(contentSize.entries);
+                    callback();
+                 });
+              }
+              
+              async.eachSeries(contents, entry_size, function(error, contentSize) {
+                if(contentSize)
+                {
+                  addSizeEntry(path, dirSize);
+                }
               });
-
-            }, function(error, contentSize) {
-              
-              
-              addSizeEntry(path, dirTotal);
-              callback(null, sizes);
-            });
+            }
+            else
+            {
+              addSizeEntry(path, 0);
+            }
+            callback(null, sizes);
           });
-
+          
         }
       });
     }
