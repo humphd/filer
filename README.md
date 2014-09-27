@@ -1167,6 +1167,7 @@ var sh = fs.Shell();
 * [sh.rm(path, [options], callback)](#rm)
 * [sh.tempDir(callback)](#tempDir)
 * [sh.mkdirp(path, callback)](#mkdirp)
+* [sh.du(path, [options], callback)](#du)
 
 
 #### sh.cd(path, callback)<a name="cd"></a>
@@ -1373,3 +1374,54 @@ sh.mkdirp('/test/mkdirp', function(err) {
   // the root '/' now contains a directory 'test' containing the directory 'mkdirp'
 });
 ```
+#### sh.du(dir,[options],callback)<a name="du"></a>
+
+Estimate file space usage—space used under a particular directory or files on a 
+file system:
+```
+{
+  total: <Number> total size of the searched file or directory,
+  [
+    {
+      size: <Number> the size in bytes of the file
+      path: <String> the file or directory path
+    },
+    ...
+  ]
+}
+```
+
+By default, the du utility shall write to standard output the size of the file space 
+allocated to, and the size of the file space allocated to each subdirectory of, the 
+file hierarchy rooted in each of the specified files. By default, when a symbolic link 
+is encountered on the command line or in the file hierarchy, du shall count the size of 
+the symbolic link (rather than the file referenced by the link), and shall not follow 
+the link to another portion of the file hierarchy.
+
+Example:
+
+```javascript
+/**
+ * Given a dir structure of:
+ *
+ * /dir
+ *    file1
+ *    file2
+ *    dir2/
+ *        file3
+ */
+
+// List the disk usage of dir directory only
+sh.du('/dir', function(err, entries) {
+  if(err) throw err;
+  // total disk usage and dir directory path will be shown
+});
+
+// List disk usage of all files and directories
+sh.du('/dir', { recursive: true }, function(err, entries) {
+  if(err) throw err;
+  // entries is now an array of 2 file/dir entries under /dir.
+  // 1 file/dir2 and  1 directory /dir2 also included
+});
+```
+
