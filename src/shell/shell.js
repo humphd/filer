@@ -426,4 +426,133 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
+/**
+ * Calculate the disk usage under a path to a directory,
+ * file or symbolic link. For disk usage to be calculated
+ * on symlinks based on the file they reference, use the
+ * `links=true` option. For a different format of sizes,
+ * specify `format=kb|mb|gb`
+ */
+Shell.prototype.du = function du(path, options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  var divisionFactor = 1;
+  var sizes = {};
+  sizes.entries = [];
+  sizes.total = 0;
+
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  callback = callback || function(){};
+
+  if(!path) {
+    callback(new Errors.EINVAL('Missing path argument'));
+    return;
+  }
+
+  // Configure the format of sizes to be used
+  if(options.format && typeof options.format === 'string') {
+    switch(options.format.toLowerCase()) {
+      case 'kb': divisionFactor = 1000; break;
+      case 'mb': divisionFactor = 1000000; break;
+      case 'gb': divisionFactor = 1000000000; break;
+    }
+  }
+
+  // Add an element(object) to sizes and modify the 
+  // size according to the format requested
+  function addSizeEntry(element, isDirectory) {
+    if(!isDirectory){ 
+      element.size /= divisionFactor;
+      sizes.total += element.size;
+    }
+    sizes.entries.push(element);
+  }
+
+  function get_size_of_linked_file() {
+    fs.stat(path, function(err, stats) {
+      if(err) {
+        callback(err);
+        return;
+      }
+
+      addSizeEntry({path: path, size: stats.size});
+      callback(null, sizes);
+    });
+  }
+
+  function get_size_of_directory() {
+    var dirSize = 0;
+
+    function get_size_of_directory_entry(entryPath, callback) {
+      entryPath = Path.join(path, entryPath);
+
+      sh.du(entryPath, options, function(err, contentSizes) {
+        if(err) {
+          callback(err);
+          return;
+        }
+
+        if(contentSizes) {
+          sizes.entries = sizes.entries.concat(contentSizes.entries);
+          sizes.total += contentSizes.total;
+          dirSize += contentSizes.total;
+        }
+
+        callback();
+      });
+    }
+
+    fs.readdir(path, function(err, contents) {
+      if(err) {
+        callback(err);
+        return;
+      }
+
+      async.eachSeries(contents, get_size_of_directory_entry, function(err, contentSize) {
+        if(err) {
+          callback(err);
+          return;
+        }
+
+        addSizeEntry({path: path, size: dirSize}, true);
+        callback(null, sizes);
+      });
+    });
+  }
+
+  function get_sizes() {
+    fs.lstat(path, function(err, stats) {
+      if(err) {
+        callback(err);
+        return;
+      }
+
+      if(stats.isDirectory()) {
+        get_size_of_directory();
+        return;
+      }
+
+      // If the node is a symbolic link and
+      // the `link` option is specified, calculate
+      // the disk usage of the node pointed to
+      // by the link
+      if(stats.isSymbolicLink() && options.links) {
+        get_size_of_linked_file();
+        return;
+      }
+
+      // Files or links (when the `link` option is
+      // unspecified or false)
+      addSizeEntry({path: path, size: stats.size});
+      callback(null, sizes);
+    });
+  }
+
+  get_sizes();
+};
+
 module.exports = Shell;

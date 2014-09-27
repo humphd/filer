@@ -1167,6 +1167,7 @@ var sh = fs.Shell();
 * [sh.rm(path, [options], callback)](#rm)
 * [sh.tempDir(callback)](#tempDir)
 * [sh.mkdirp(path, callback)](#mkdirp)
+* [sh.du(path, [options], callback)](#du)
 
 
 #### sh.cd(path, callback)<a name="cd"></a>
@@ -1371,5 +1372,41 @@ Example:
 sh.mkdirp('/test/mkdirp', function(err) {
   if(err) throw err;
   // the root '/' now contains a directory 'test' containing the directory 'mkdirp'
+});
+```
+
+#### sh.du(path, [options], callback)<a name="du"></a>
+
+Computes the disk usage of contents under the given path. See [du](http://pubs.opengroup.org/onlinepubs/9699919799/utilities/du.html).
+If the option `links=true` is set, the files referenced by the link will be considered for space usage computation whenever a link is encountered during traversal through the path.
+The format for the disk space can also be provided by specifying the `format=kb|mb|gb` option.
+
+Example:
+
+```javascript
+// '/file' contains the text 'A file'
+sh.du('/file', function(err, sizes) {
+  if(err) throw err;
+  // sizes = {
+  //            total: 6,
+  //            entries: [{path: '/file', size: 6}]
+  //         }
+});
+
+sh.du('/file', {format: 'kb'}, function(err, sizes) {
+  if(err) throw err;
+  // sizes = {
+  //            total: 0.006,
+  //            entries: [{path: '/file', size: 0.006}]
+  //         }
+});
+
+// '/link' is a symlink to '/file'
+sh.du('/link', {links: true}, function(err, sizes) {
+  if(err) throw err;
+  // sizes = {
+  //            total: 6,
+  //            entries: [{path: '/link', size: 6}]
+  //         }
 });
 ```
