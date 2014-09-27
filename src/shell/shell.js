@@ -346,8 +346,26 @@ Shell.prototype.du = function(dir,options, callback) {
       });
     });
   }
-
-  list(dir, callback);
+  fs.stat(dir, function(error, stats) {
+    if(error) {
+      callback(error);
+      return;
+    }
+    var entry = {
+      path: dir,
+      size: stats.size
+    };
+    if(stats.isFile()){
+      result.total = stats.size;
+      result.entries.push(entry);
+      callback(null, result);
+      return;
+    }
+    else if(stats.isDirectory()){
+      list(dir, callback);
+    }
+  });
+  
 };
 
 /**
