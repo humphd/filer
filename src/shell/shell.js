@@ -58,6 +58,10 @@ function Shell(fs, options) {
   };
 }
 
+
+
+
+
 /**
  * Execute the .js command located at `path`. Such commands
  * should assume the existence of 3 arguments, which will be
@@ -139,6 +143,97 @@ Shell.prototype.touch = function(path, options, callback) {
       }
     } else {
       updateTimes(path);
+    }
+  });
+};
+
+
+/**
+ * Gives the usage of a file or directory in the file sytem.
+ */
+Shell.prototype.du = function(path, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  var sizes = {};
+  sizes.entries = [];
+  sizes.total = 0;
+  var conversion = 1;
+
+  callback = callback || function(){};
+
+
+  if(!path) {
+    callback(new Errors.EINVAL('Missing path argument'));
+    return;
+  }
+
+   //Adds element into sizes
+   function addSizeEntry(entryPath, entrySize) {
+    var element = {
+      path:entryPath, 
+      size:entrySize
+    }
+    sizes.total += element.size;
+    
+    sizes.entries.push(element);
+  }
+
+
+
+
+  fs.exists(path, function(exists){ 
+    if (exists) {
+      fs.stat(path, function (error, stat) {
+
+        if(stat.isFile())
+        {
+          addSizeEntry(path, stat.size);
+          callback(null, sizes);
+          return;
+        }
+        else if(stat.isDirectory())
+        {
+          fs.readdir(path, function(error, contents){
+            if(contents.length > 0)
+            {
+
+              var dirSize = 0;
+              
+              function entry_size(recievedPath, callback){
+                  dirPath = Path.join(path, recievedPath);
+
+                  sh.du(dirPath, function(error, entrySize){
+                    if(entrySize)
+                    {
+                      dirSize += entrySize.total;
+                      sizes.entries = sizes.entries.concat(entrySize.entries);
+                    }
+                    callback(entrySize);
+                 });
+              }
+
+              async.eachSeries(contents, entry_size, function(error, entrySize) {
+                if(entrySize)
+                {
+                  addSizeEntry(path, dirSize);
+                }
+              });
+
+            }
+            else
+            {
+              addSizeEntry(path, 0);
+            }
+            callback(null, sizes);
+          });
+          
+        }
+      });
+    }
+    else
+    {
+      callback(new Errors.ENOENT('Path does not exist'));
+      return;
     }
   });
 };
