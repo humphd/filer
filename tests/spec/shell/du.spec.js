@@ -74,12 +74,11 @@ describe('FileSystemShell.du', function() {
  });
 
 
- it('should return the size of the directory', function(done) {
+ it('should return the size of the directory with single file in it', function(done) {
    var fs = util.fs();
    var shell = fs.Shell();
 
-   var expectedResult = [{path: '/dir1/file1', size: 11},
-                         {path: '/dir1', size: 11}];
+   var expectedResult = [{path: '/dir1', size: 11}];
 
    fs.mkdir('/dir1', function(err) {
    
@@ -94,6 +93,29 @@ describe('FileSystemShell.du', function() {
       });
     });
    });
+ });
+
+ it('should return the size of the directory with sub-directory and files in both', function(done) {
+   var fs = util.fs();
+   var shell = fs.Shell();
+
+   var expectedResult = [{path: '/dir1', size: 11},{path: '/dir1/dir2', size: 11}];
+
+   fs.mkdir('/dir1', function(err) {
+   fs.mkdir('/dir1/dir2', function(err) {
+   fs.writeFile('/dir1/file1', 'Hello World', function(err) {
+    fs.writeFile('/dir1/dir2/file1', 'Hello World', function(err) {
+       shell.du('/dir1', function(err, sizes) {
+       expect(err).not.to.exist;
+       expect(sizes).to.exist;
+       expect(sizes.entries).to.deep.equal(expectedResult);
+       expect(sizes.total).to.equal(22);
+       done();
+      });
+    });
+    });
+   });
+ });
  });
 
 

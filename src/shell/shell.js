@@ -196,23 +196,29 @@ Shell.prototype.du = function(path, callback) {
           fs.readdir(path, function(error, contents){
             if(contents.length > 0)
             {
+
               var dirSize = 0;
               
-              function entry_size(recievedPath, dirSize){
+              function entry_size(recievedPath, callback){
                   dirPath = Path.join(path, recievedPath);
-                  sh.du(recievedPath, function(error, contentSize){
-                    dirSize += contentSize.total;
-                    sizes.entries = sizes.entries.concat(contentSize.entries);
-                    callback();
+
+                  sh.du(dirPath, function(error, entrySize){
+                    if(entrySize)
+                    {
+                      dirSize += entrySize.total;
+                      sizes.entries = sizes.entries.concat(entrySize.entries);
+                    }
+                    callback(entrySize);
                  });
               }
-              
-              async.eachSeries(contents, entry_size, function(error, contentSize) {
-                if(contentSize)
+
+              async.eachSeries(contents, entry_size, function(error, entrySize) {
+                if(entrySize)
                 {
                   addSizeEntry(path, dirSize);
                 }
               });
+
             }
             else
             {
