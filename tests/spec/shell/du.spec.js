@@ -244,35 +244,7 @@ describe('FileSystemShell.du', function() {
       });
     });
     
-  /*  it('should return disk usage of symlinked file', function(done) {
-    var fs = util.fs();
-    var shell = fs.Shell();
-    var contents = "This is a text";
-    var contents2 = "bbbb";
-
-    //should it return the value of original file or the symlink?
-    fs.writeFile('/file1', contents, function(err) {
-      if(err) throw err;
-
-      fs.symlink('/file1', 'testlink', function(err) {
-        if(err) throw err;
-
-        shell.du('testlink', function(err, sizes) {
-        expect(err).not.to.exist; 
-
-        var item = sizes;
-        expect(item.results.length).to.equal(1);
-        
-        expect(item.totalsize).to.equal(0);
-             
-        expect(item.results[0].path).to.equal('/testlink');    
-        expect(item.results[0].size).to.equal(0);
-
-        done();
-        });
-      });
-    });
-  });*/
+  
   
 });
     
