@@ -426,4 +426,108 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
+Shell.prototype.du = function(dir, options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  var totsize = 0;
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  callback = callback || function(){};
+
+  function diskusage(path, callback) { 
+    var pathname = Path.resolve(sh.pwd(), path);
+    var result = [];
+    var sizes = {
+        totalsize:0,
+        results: path,
+    };
+    
+    fs.stat(pathname, function(error, stats) { 
+        if(error) {
+            callback(error);
+            return;
+        }
+        if(stats.type === 'FILE'){ 
+            var entry = {
+                size: stats.size,
+                type: stats.type, 
+                path:pathname,
+              };
+            result.push(entry);
+            sizes.totalsize = entry.size;
+            sizes.results = result.concat();
+            callback(error, sizes);    
+            return;
+        }
+    else {
+        fs.readdir(pathname, function(error, entries) { 
+          if(error) {
+            callback(error); 
+            return;
+          } 
+
+          function getDirEntry(name, callback) { 
+            name = Path.join(pathname, name); 
+            fs.stat(name, function(error, stats) {
+              if(error) {
+                callback(error);
+                return;
+              }
+              
+              var entry = {
+                size: stats.size,
+                type: stats.type, 
+                  path: name,
+              }; 
+              totsize += stats.size; 
+              if(stats.type === 'DIRECTORY') { 
+                diskusage(entry.path, function(error, items) { 
+                  if(error) {
+                    callback(error);
+                    return;
+                  }
+
+                  result.push(entry);
+                  if(items.results.length > 0){
+                      items.results.forEach(function(entry2) {
+                        result.push(entry2);
+                      });
+                  }
+                  callback();
+                });
+              } else {
+                result.push(entry);
+                callback();
+              }
+
+            });
+          }
+
+          async.eachSeries(entries, getDirEntry, function(error) {
+            if (result.length > 0) {
+                sizes.totalsize = totsize;
+                sizes.results = result.concat();
+            }
+            else{ 
+                var entry = {
+                    size: 0,
+                    path: pathname,
+                }; 
+                result.push(entry)
+                sizes.results = result.concat();
+            }
+            callback(error, sizes);
+          });
+        }); 
+      }
+    });
+  }
+    
+  diskusage(dir, callback);
+  
+};
+
 module.exports = Shell;

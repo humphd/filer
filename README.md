@@ -1373,3 +1373,22 @@ sh.mkdirp('/test/mkdirp', function(err) {
   // the root '/' now contains a directory 'test' containing the directory 'mkdirp'
 });
 ```
+
+#### sh.du()<a name="du"></a>
+Display the disk usage of files or directories and their children
+
+Example:
+
+```javascript
+// Single file
+ shell.du('dir/dir2/file', function(err, sizes) {
+        expect(err).not.to.exist; 
+// returns sizes which is an object with a total size and sizes for the file
+
+// Directory
+ shell.du('/', function(err, sizes) {
+        expect(err).not.to.exist;
+// returns sizes which is an object with a total size and sizes
+// for every child under the directory
+});
+```
