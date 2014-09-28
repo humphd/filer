@@ -312,7 +312,8 @@ list(dir, callback);
           var entry = {
             path: name,
             size: 0,
-            dir: Path.dirname(name)
+            dir: Path.dirname(name),
+            type: stats.type
           };
 
           if(stats.type === 'DIRECTORY') {
@@ -343,40 +344,47 @@ list(dir, callback);
         callback(error, result);
       });
     });
-  }
+}
 
-  list(dir, function(error, result) {
-    var pathname = Path.resolve(sh.pwd(), dir);
-    fs.stat(pathname, function(error, stats) {
-      if(error) {
-        callback(error);
-        return;
-      }
+list(dir, function(error, result) {
+  var pathname = Path.resolve(sh.pwd(), dir);
+  fs.stat(pathname, function(error, stats) {
+    if(error) {
+      callback(error);
+      return;
+    }
 
-      var entry = {
-          path: pathname,
-          size: 0
-      };
 
-      if(stats.type === 'DIRECTORY') {   
+    if (!options.all && result) {
+      result = result.filter(function(item) {
+        return item.type === 'DIRECTORY';
+      });
+    }
 
-        result.forEach(function(item, i, arr) {
-          if(item.dir === pathname) {
-            entry.size += item.size;
-          }
-        });
-        result.push(entry);
-      }
-      else if(stats.type === 'FILE') {
+    var entry = {
+      path: pathname,
+      size: 0
+    };
 
-        result = [];
-        entry.size = stats.size;
-        result.push(entry);
-      }
+    if(stats.type === 'DIRECTORY') {   
 
-      callback(error, result);
-    });  
-  });
+      result.forEach(function(item, i, arr) {
+        if(item.dir === pathname) {
+          entry.size += item.size;
+        }
+      });
+      result.push(entry);
+    }
+    else if(stats.type === 'FILE') {
+
+      result = [];
+      entry.size = stats.size;
+      result.push(entry);
+    }
+
+    callback(error, result);
+  });  
+});
 };
 
 /**

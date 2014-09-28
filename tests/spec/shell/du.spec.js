@@ -154,6 +154,64 @@ describe('FileSystemShell.du', function() {
 
               shell.du(null, function(err, list) {
                 expect(err).not.to.exist;
+                expect(list.length).to.equal(4);
+
+                list.forEach(function(item, i, arr) {
+                  switch(item.path) {
+                    case '/dir':
+                    expect(item.size).to.equal(3);
+                    break;
+                    case '/dir2':
+                    expect(item.size).to.equal(5);
+                    break;
+                    case '/dir2/dir3':
+                    expect(item.size).to.equal(0);
+                    break;
+                    case '/':
+                    expect(item.size).to.equal(8);
+                    break;
+
+                    default:
+                    // shouldn't happen
+                    expect(true).to.be.false;
+                    break;
+                  }
+
+                  if(i === arr.length -1) {
+                    done();
+                  }
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it('should return the sizes of all dirs and files', function(done) {
+    var fs = util.fs();
+    var shell = fs.Shell();
+    var contents = "ccc";
+    var contents2 = 'bbbbb';
+
+    fs.mkdir('/dir', function(err) {
+      if(err) throw err;
+
+      fs.mkdir('/dir2', function(err) {
+        if(err) throw err;
+
+        fs.mkdir('/dir2/dir3', function(err) {
+          if(err) throw err;
+
+          fs.writeFile('/dir/file', contents, function(err) {
+            if(err) throw err;
+
+            fs.writeFile('/dir2/file2', contents2, function(err) {
+              if(err) throw err;
+
+              shell.du(null, { all: true }, function(err, list) {
+                expect(err).not.to.exist;
                 expect(list.length).to.equal(6);
 
                 list.forEach(function(item, i, arr) {
