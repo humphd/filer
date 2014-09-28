@@ -268,22 +268,27 @@ list(dir, callback);
 
 /**
  * Get the listing of a directory and sub directories, returning an array of
- * file entries in the following form:
+ * entries in the following form:
  *
  * {
- *   path: <String> the absolute or relative path of the directory entry
+ *   path: <String> the absolute path of the directory entry
  *   size: <Number> the size in bytes of the entry
+ *   dir: <String> the parent directory of the entry
+ *   type: <String> the type of the entry   
  * }
  *
- * By default du() gives a directory listing with files.
+ * By default du() gives a directory listing without including files. If you
+ * want to include files in the array, use the `all=true` option.
+ * However, when target path is a file, it returns
+ * the file info no matter if `all=true` option exists or not.
  *
+ * 
  */
  Shell.prototype.du = function(dir, options, callback) {
   var sh = this;
   var fs = sh.fs;
 
   dir = dir || sh.pwd();
-  // var absolute = Path.isAbsolute(dir);
 
   if(typeof options === 'function') {
     callback = options;
@@ -344,47 +349,46 @@ list(dir, callback);
         callback(error, result);
       });
     });
-}
+  }
 
-list(dir, function(error, result) {
-  var pathname = Path.resolve(sh.pwd(), dir);
-  fs.stat(pathname, function(error, stats) {
-    if(error) {
-      callback(error);
-      return;
-    }
+  list(dir, function(error, result) {
+    var pathname = Path.resolve(sh.pwd(), dir);
+    fs.stat(pathname, function(error, stats) {
+      if(error) {
+        callback(error);
+        return;
+      }
 
+      if (!options.all && result) {
+        result = result.filter(function(item) {
+          return item.type === 'DIRECTORY';
+        });
+      }
 
-    if (!options.all && result) {
-      result = result.filter(function(item) {
-        return item.type === 'DIRECTORY';
-      });
-    }
+      var entry = {
+        path: pathname,
+        size: 0
+      };
 
-    var entry = {
-      path: pathname,
-      size: 0
-    };
+      if(stats.type === 'DIRECTORY') {   
 
-    if(stats.type === 'DIRECTORY') {   
+        result.forEach(function(item, i, arr) {
+          if(item.dir === pathname) {
+            entry.size += item.size;
+          }
+        });
+        result.push(entry);
+      }
+      else if(stats.type === 'FILE') {
 
-      result.forEach(function(item, i, arr) {
-        if(item.dir === pathname) {
-          entry.size += item.size;
-        }
-      });
-      result.push(entry);
-    }
-    else if(stats.type === 'FILE') {
+        result = [];
+        entry.size = stats.size;
+        result.push(entry);
+      }
 
-      result = [];
-      entry.size = stats.size;
-      result.push(entry);
-    }
-
-    callback(error, result);
-  });  
-});
+      callback(error, result);
+    });  
+  });
 };
 
 /**
