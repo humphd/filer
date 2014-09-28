@@ -267,6 +267,131 @@ Shell.prototype.ls = function(dir, options, callback) {
 };
 
 /**
+ * Get the listing of a directory and sub directories, returning an array of
+ * entries in the following form:
+ *
+ * {
+ *   path: <String> the absolute path of the directory entry
+ *   size: <Number> the size in bytes of the entry
+ *   dir: <String> the parent directory of the entry
+ *   type: <String> the type of the entry   
+ * }
+ *
+ * By default du() gives a directory listing without files. If you
+ * want to include files in the array, use the `all=true` option.
+ * However, when target path is a file, it returns
+ * the file info no matter if `all=true` option exists or not.
+ *
+ * 
+ */
+Shell.prototype.du = function(dir, options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+
+  dir = dir || sh.pwd();
+
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  callback = callback || function(){};
+
+  function list(path, callback) {
+    var pathname = Path.resolve(sh.pwd(), path);
+    var result = [];
+
+    fs.readdir(pathname, function(error, entries) {
+      if(error) {
+        callback(error);
+        return;
+      }
+
+      function getDirEntry(name, callback) {
+        name = Path.join(pathname, name);
+        fs.stat(name, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+          var entry = {
+            path: name,
+            size: 0,
+            dir: Path.dirname(name),
+            type: stats.type
+          };
+
+          if(stats.type === 'DIRECTORY') {
+            list(name, function(error, items) {
+              if(error) {
+                callback(error);
+                return;
+              }
+              
+              items.forEach(function(item, i, arr) {
+                if(item.dir === name) {
+                  entry.size += item.size;
+                }
+              });
+              result = result.concat(items);
+              result.push(entry);
+              callback();
+            });
+          } else {
+            entry.size = stats.size;
+            result.push(entry);
+            callback();
+          }
+        });
+      }
+
+      async.eachSeries(entries, getDirEntry, function(error) {
+        callback(error, result);
+      });
+    });
+  }
+
+  list(dir, function(error, result) {
+    var pathname = Path.resolve(sh.pwd(), dir);
+    fs.stat(pathname, function(error, stats) {
+      if(error) {
+        callback(error);
+        return;
+      }
+
+      if (!options.all && result) {
+        result = result.filter(function(item) {
+          return item.type === 'DIRECTORY';
+        });
+      }
+
+      var entry = {
+        path: pathname,
+        size: 0
+      };
+
+      if(stats.type === 'DIRECTORY') {   
+
+        result.forEach(function(item, i, arr) {
+          if(item.dir === pathname) {
+            entry.size += item.size;
+          }
+        });
+        result.push(entry);
+      }
+      else if(stats.type === 'FILE') {
+
+        result = [];
+        entry.size = stats.size;
+        result.push(entry);
+      }
+
+      callback(error, result);
+    });  
+  });
+};
+
+/**
  * Removes the file or directory at `path`. If `path` is a file
  * it will be removed. If `path` is a directory, it will be
  * removed if it is empty, otherwise the callback will receive
