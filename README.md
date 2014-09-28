@@ -1161,6 +1161,7 @@ var sh = fs.Shell();
 * [sh.cd(path, callback)](#cd)
 * [sh.pwd()](#pwd)
 * [sh.ls(dir, [options], callback)](#ls)
+* [sh.du(dir, [options], callback)](#du)
 * [sh.exec(path, [args], callback)](#exec)
 * [sh.touch(path, [options], callback)](#touch)
 * [sh.cat(files, callback)](#cat)
@@ -1232,6 +1233,55 @@ sh.ls('/dir', { recursive: true }, function(err, entries) {
   // entries is now an array of 3 file/dir entries under /dir.
   // The entry object for '/dir2' also includes a `contents` property,
   // which is an array of 1 entry element for `file3`.
+});
+```
+
+#### sh.du(dir, [options], callback)<a name="du"></a>
+
+Get the listing of a directory and sub directories, returning an array of
+entries in the following form:
+
+```
+{
+  path: <String> the absolute path of the directory entry
+  size: <Number> the size in bytes of the entry
+  dir: <String> the parent directory of the entry
+  type: <String> the type of the entry   
+}
+```
+
+By default `sh.du()` gives a directory listing without files. If you
+want to include files in the array, use the `all=true` option.
+However, when target path is a file, it returns
+the file info no matter if `all=true` option exists or not.
+
+Example:
+
+```javascript
+/**
+ * Given a dir structure of:
+ *
+ * /dir
+ *  file1
+ *  file2
+ *  dir2/
+ *   file3
+ */
+
+// Directory listing
+sh.du('/dir', function(err, entries) {
+  if(err) throw err;
+  // entries is now an array of 2 dir entries which are /dir and /dir/dir2
+  // dir size is the total of file1, file2, and dir2 sizes
+  // dir2 size is equal to the size of file3
+});
+
+// Directory listing with files
+sh.du('/dir', { all: true }, function(err, entries) {
+  if(err) throw err;
+  // entries is now an array of 5 file/dir entries
+  // file1/2 dir property is 'dir'
+  // file3 dir property is 'dir2'
 });
 ```
 

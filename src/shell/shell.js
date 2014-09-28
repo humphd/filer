@@ -277,7 +277,7 @@ list(dir, callback);
  *   type: <String> the type of the entry   
  * }
  *
- * By default du() gives a directory listing without including files. If you
+ * By default du() gives a directory listing without files. If you
  * want to include files in the array, use the `all=true` option.
  * However, when target path is a file, it returns
  * the file info no matter if `all=true` option exists or not.
