@@ -13,7 +13,7 @@ function Shell(fs, options) {
   /**
    * The bound FileSystem (cannot be changed)
    */
-  Object.defineProperty(this, 'fs', {
+   Object.defineProperty(this, 'fs', {
     get: function() { return fs; },
     enumerable: true
   });
@@ -23,7 +23,7 @@ function Shell(fs, options) {
    * path, tmp, and other env vars). Use env.get()
    * and env.set() to work with variables.
    */
-  Object.defineProperty(this, 'env', {
+   Object.defineProperty(this, 'env', {
     get: function() { return env; },
     enumerable: true
   });
@@ -33,7 +33,7 @@ function Shell(fs, options) {
    * include `cd` on the `this` vs. proto so that
    * we can access cwd without exposing it externally.
    */
-  this.cd = function(path, callback) {
+   this.cd = function(path, callback) {
     path = Path.resolve(cwd, path);
     // Make sure the path actually exists, and is a dir
     fs.stat(path, function(err, stats) {
@@ -53,7 +53,7 @@ function Shell(fs, options) {
   /**
    * Get the current working directory (changed with `cd()`)
    */
-  this.pwd = function() {
+   this.pwd = function() {
     return cwd;
   };
 }
@@ -74,7 +74,7 @@ function Shell(fs, options) {
  *   // .js code here
  * }
  */
-Shell.prototype.exec = function(path, args, callback) {
+ Shell.prototype.exec = function(path, args, callback) {
   /* jshint evil:true */
   var sh = this;
   var fs = sh.fs;
@@ -107,7 +107,7 @@ Shell.prototype.exec = function(path, args, callback) {
  *  * updateOnly - whether to create the file if missing (defaults to false)
  *  * date - use the provided Date value instead of current date/time
  */
-Shell.prototype.touch = function(path, options, callback) {
+ Shell.prototype.touch = function(path, options, callback) {
   var sh = this;
   var fs = sh.fs;
   if(typeof options === 'function') {
@@ -149,7 +149,7 @@ Shell.prototype.touch = function(path, options, callback) {
  * be a String (path to single file) or an Array of Strings
  * (multiple file paths).
  */
-Shell.prototype.cat = function(files, callback) {
+ Shell.prototype.cat = function(files, callback) {
   var sh = this;
   var fs = sh.fs;
   var all = '';
@@ -200,7 +200,7 @@ Shell.prototype.cat = function(files, callback) {
  * to follow directories as they are encountered, use
  * the `recursive=true` option.
  */
-Shell.prototype.ls = function(dir, options, callback) {
+ Shell.prototype.ls = function(dir, options, callback) {
   var sh = this;
   var fs = sh.fs;
   if(typeof options === 'function') {
@@ -261,9 +261,122 @@ Shell.prototype.ls = function(dir, options, callback) {
         callback(error, result);
       });
     });
+}
+
+list(dir, callback);
+};
+
+/**
+ * Get the listing of a directory and sub directories, returning an array of
+ * file entries in the following form:
+ *
+ * {
+ *   path: <String> the absolute or relative path of the directory entry
+ *   size: <Number> the size in bytes of the entry
+ * }
+ *
+ * By default du() gives a directory listing with files.
+ *
+ */
+ Shell.prototype.du = function(dir, options, callback) {
+  var sh = this;
+  var fs = sh.fs;
+
+  dir = dir || sh.pwd();
+  // var absolute = Path.isAbsolute(dir);
+
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  callback = callback || function(){};
+
+  function list(path, callback) {
+    var pathname = Path.resolve(sh.pwd(), path);
+    var result = [];
+
+    fs.readdir(pathname, function(error, entries) {
+      if(error) {
+        callback(error);
+        return;
+      }
+
+      function getDirEntry(name, callback) {
+        name = Path.join(pathname, name);
+        fs.stat(name, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+          var entry = {
+            path: name,
+            size: 0,
+            dir: Path.dirname(name)
+          };
+
+          if(stats.type === 'DIRECTORY') {
+            list(name, function(error, items) {
+              if(error) {
+                callback(error);
+                return;
+              }
+              
+              items.forEach(function(item, i, arr) {
+                if(item.dir === name) {
+                  entry.size += item.size;
+                }
+              });
+              result = result.concat(items);
+              result.push(entry);
+              callback();
+            });
+          } else {
+            entry.size = stats.size;
+            result.push(entry);
+            callback();
+          }
+        });
+      }
+
+      async.eachSeries(entries, getDirEntry, function(error) {
+        callback(error, result);
+      });
+    });
   }
 
-  list(dir, callback);
+  list(dir, function(error, result) {
+    var pathname = Path.resolve(sh.pwd(), dir);
+    fs.stat(pathname, function(error, stats) {
+      if(error) {
+        callback(error);
+        return;
+      }
+
+      var entry = {
+          path: pathname,
+          size: 0
+      };
+
+      if(stats.type === 'DIRECTORY') {   
+
+        result.forEach(function(item, i, arr) {
+          if(item.dir === pathname) {
+            entry.size += item.size;
+          }
+        });
+        result.push(entry);
+      }
+      else if(stats.type === 'FILE') {
+
+        result = [];
+        entry.size = stats.size;
+        result.push(entry);
+      }
+
+      callback(error, result);
+    });  
+  });
 };
 
 /**
@@ -273,7 +386,7 @@ Shell.prototype.ls = function(dir, options, callback) {
  * an error. In order to remove non-empty directories, use the
  * `recursive=true` option.
  */
-Shell.prototype.rm = function(path, options, callback) {
+ Shell.prototype.rm = function(path, options, callback) {
   var sh = this;
   var fs = sh.fs;
   if(typeof options === 'function') {
@@ -335,9 +448,9 @@ Shell.prototype.rm = function(path, options, callback) {
         });
       });
     });
-  }
+}
 
-  remove(path, callback);
+remove(path, callback);
 };
 
 /**
@@ -345,7 +458,7 @@ Shell.prototype.rm = function(path, options, callback) {
  * present. The directory used is the one specified in
  * env.TMP. The callback receives (error, tempDirName).
  */
-Shell.prototype.tempDir = function(callback) {
+ Shell.prototype.tempDir = function(callback) {
   var sh = this;
   var fs = sh.fs;
   var tmp = sh.env.get('TMP');
@@ -365,7 +478,7 @@ Shell.prototype.tempDir = function(callback) {
  * https://www.npmjs.org/package/ensureDir
  * MIT License
  */
-Shell.prototype.mkdirp = function(path, callback) {
+ Shell.prototype.mkdirp = function(path, callback) {
   var sh = this;
   var fs = sh.fs;
   callback = callback || function(){};
@@ -421,9 +534,9 @@ Shell.prototype.mkdirp = function(path, callback) {
         }
       }
     });
-  }
+}
 
-  _mkdirp(path, callback);
+_mkdirp(path, callback);
 };
 
 module.exports = Shell;
