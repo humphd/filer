@@ -13,7 +13,7 @@ function Shell(fs, options) {
   /**
    * The bound FileSystem (cannot be changed)
    */
-   Object.defineProperty(this, 'fs', {
+  Object.defineProperty(this, 'fs', {
     get: function() { return fs; },
     enumerable: true
   });
@@ -23,7 +23,7 @@ function Shell(fs, options) {
    * path, tmp, and other env vars). Use env.get()
    * and env.set() to work with variables.
    */
-   Object.defineProperty(this, 'env', {
+  Object.defineProperty(this, 'env', {
     get: function() { return env; },
     enumerable: true
   });
@@ -33,7 +33,7 @@ function Shell(fs, options) {
    * include `cd` on the `this` vs. proto so that
    * we can access cwd without exposing it externally.
    */
-   this.cd = function(path, callback) {
+  this.cd = function(path, callback) {
     path = Path.resolve(cwd, path);
     // Make sure the path actually exists, and is a dir
     fs.stat(path, function(err, stats) {
@@ -53,7 +53,7 @@ function Shell(fs, options) {
   /**
    * Get the current working directory (changed with `cd()`)
    */
-   this.pwd = function() {
+  this.pwd = function() {
     return cwd;
   };
 }
@@ -74,7 +74,7 @@ function Shell(fs, options) {
  *   // .js code here
  * }
  */
- Shell.prototype.exec = function(path, args, callback) {
+Shell.prototype.exec = function(path, args, callback) {
   /* jshint evil:true */
   var sh = this;
   var fs = sh.fs;
@@ -107,7 +107,7 @@ function Shell(fs, options) {
  *  * updateOnly - whether to create the file if missing (defaults to false)
  *  * date - use the provided Date value instead of current date/time
  */
- Shell.prototype.touch = function(path, options, callback) {
+Shell.prototype.touch = function(path, options, callback) {
   var sh = this;
   var fs = sh.fs;
   if(typeof options === 'function') {
@@ -149,7 +149,7 @@ function Shell(fs, options) {
  * be a String (path to single file) or an Array of Strings
  * (multiple file paths).
  */
- Shell.prototype.cat = function(files, callback) {
+Shell.prototype.cat = function(files, callback) {
   var sh = this;
   var fs = sh.fs;
   var all = '';
@@ -200,7 +200,7 @@ function Shell(fs, options) {
  * to follow directories as they are encountered, use
  * the `recursive=true` option.
  */
- Shell.prototype.ls = function(dir, options, callback) {
+Shell.prototype.ls = function(dir, options, callback) {
   var sh = this;
   var fs = sh.fs;
   if(typeof options === 'function') {
@@ -261,9 +261,9 @@ function Shell(fs, options) {
         callback(error, result);
       });
     });
-}
+  }
 
-list(dir, callback);
+  list(dir, callback);
 };
 
 /**
@@ -284,7 +284,7 @@ list(dir, callback);
  *
  * 
  */
- Shell.prototype.du = function(dir, options, callback) {
+Shell.prototype.du = function(dir, options, callback) {
   var sh = this;
   var fs = sh.fs;
 
@@ -398,7 +398,7 @@ list(dir, callback);
  * an error. In order to remove non-empty directories, use the
  * `recursive=true` option.
  */
- Shell.prototype.rm = function(path, options, callback) {
+Shell.prototype.rm = function(path, options, callback) {
   var sh = this;
   var fs = sh.fs;
   if(typeof options === 'function') {
@@ -460,9 +460,9 @@ list(dir, callback);
         });
       });
     });
-}
+  }
 
-remove(path, callback);
+  remove(path, callback);
 };
 
 /**
@@ -470,7 +470,7 @@ remove(path, callback);
  * present. The directory used is the one specified in
  * env.TMP. The callback receives (error, tempDirName).
  */
- Shell.prototype.tempDir = function(callback) {
+Shell.prototype.tempDir = function(callback) {
   var sh = this;
   var fs = sh.fs;
   var tmp = sh.env.get('TMP');
@@ -490,7 +490,7 @@ remove(path, callback);
  * https://www.npmjs.org/package/ensureDir
  * MIT License
  */
- Shell.prototype.mkdirp = function(path, callback) {
+Shell.prototype.mkdirp = function(path, callback) {
   var sh = this;
   var fs = sh.fs;
   callback = callback || function(){};
@@ -546,9 +546,9 @@ remove(path, callback);
         }
       }
     });
-}
+  }
 
-_mkdirp(path, callback);
+  _mkdirp(path, callback);
 };
 
 module.exports = Shell;
