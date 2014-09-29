@@ -1167,6 +1167,7 @@ var sh = fs.Shell();
 * [sh.rm(path, [options], callback)](#rm)
 * [sh.tempDir(callback)](#tempDir)
 * [sh.mkdirp(path, callback)](#mkdirp)
+* [sh.du(path, callback)](#du)
 
 
 #### sh.cd(path, callback)<a name="cd"></a>
@@ -1371,5 +1372,25 @@ Example:
 sh.mkdirp('/test/mkdirp', function(err) {
   if(err) throw err;
   // the root '/' now contains a directory 'test' containing the directory 'mkdirp'
+});
+```
+
+#### sh.du(path, callback)<a name="du"></a>
+
+Estimates the size used on disk by a specified file or directory. If
+no path is specified the command will run on the current pwd. Callback
+takes an `error` and `sizes` parameter. `szies` will be an object
+containing a `total` property which represents the total size of the 
+file/dir du has been called on and a `entries` property which is an 
+array of objects containing the path and size of each file/directory
+in the directory tree.
+
+Example:
+
+```javascript
+sh.du('/dir', function(err, sizes) {
+  if(err) throw err;
+  //sizes now contains the total size of dir
+  //and all entries in the directory
 });
 ```

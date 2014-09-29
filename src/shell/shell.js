@@ -426,4 +426,95 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
+/*
+*  du (Disk Usage) will give an estimate of the amount of space
+*  used by a directory or file. The path argument can be either
+*  a directory, a file or a symlink'd directory. If a path is 
+*  not provided, the command will be called on the present
+*  working directory.
+*/
+Shell.prototype.du = function(path, callback) {
+  var sh = this;
+  var fs = sh.fs;
+  var sizes = {
+    'total': 0,
+    'entries': []
+  }
+  
+  callback = callback || function(){};
+  path = path || sh.pwd();
+
+  //Check that the path provided exists
+  //If not, callback with error
+  fs.exists(path, function(exists) {
+    if(!exists) {
+      callback(new Errors.EINVAL('Path not found'), sizes);
+      return;
+    }
+  });
+  
+  function addEntry(entry, dir) {
+    if(!dir){
+      sizes.total += entry.size;
+    }
+    sizes.entries.push(entry);
+  }
+  
+  function directory() {
+    var total = 0;
+
+    function getSize(filePath, callback) {
+      filePath = Path.join(path, filePath);
+      
+      sh.du(filePath, function(err, counts) {
+        if(err) {
+          callback(err);
+          return;
+        }
+        
+        if(counts) 
+        {
+          sizes.entries = sizes.entries.concat(counts.entries);
+          sizes.total += counts.total;
+          total += counts.total;
+        }
+        
+        callback();
+      });
+    }
+    
+    fs.readdir(path, function(err, entries) {
+      if(err) {
+        callback(err);
+        return;
+      }
+      
+      async.eachSeries(entries, getSize, function(err) {
+        if(err) { 
+          callback(err);
+          return;
+        }
+
+        addEntry({path: path, size: total}, true);
+        callback(null, sizes);
+      });
+    });
+  }
+
+  fs.lstat(path, function(err, stats) {
+    if(err) {
+      callback(err);
+      return;
+    }
+      
+    if(stats.type === 'DIRECTORY') {
+      directory();
+      return;
+    }
+      
+    addEntry({path: path, size: stats.size});
+    callback(null, sizes);
+  });
+};
+
 module.exports = Shell;
