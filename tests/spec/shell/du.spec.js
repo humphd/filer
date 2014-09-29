@@ -130,15 +130,15 @@ describe('FileSystemShell.du', function() {
                     shell.du('/', function(err, list) {
                       expect(err).not.to.exist;
 
-                      expect(list.entries[1].path).to.equal('/dir/dir2/file3');
-                      expect(list.entries[2].path).to.equal('/dir/dir2/file4');
-                      expect(list.entries[3].path).to.equal('/dir/dir2/dir3/file5');
-                      expect(list.entries[4].path).to.equal('/dir/dir2/dir3');
-                      expect(list.entries[5].path).to.equal('/dir/dir2');
-                      expect(list.entries[6].path).to.equal('/dir');
-                      expect(list.entries[7].path).to.equal('/file');
-                      expect(list.entries[8].path).to.equal('/file2');
-                      expect(list.entries[0].path).to.equal('/');
+                      expect(list.entries[0].path).to.equal('/dir/dir2/file3');
+                      expect(list.entries[1].path).to.equal('/dir/dir2/file4');
+                      expect(list.entries[2].path).to.equal('/dir/dir2/dir3/file5');
+                      expect(list.entries[3].path).to.equal('/dir/dir2/dir3');
+                      expect(list.entries[4].path).to.equal('/dir/dir2');
+                      expect(list.entries[5].path).to.equal('/dir');
+                      expect(list.entries[6].path).to.equal('/file');
+                      expect(list.entries[7].path).to.equal('/file2');
+                      expect(list.entries[8].path).to.equal('/');
 
                       done();
                     });
