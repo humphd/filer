@@ -73,68 +73,90 @@ function Shell(fs, options) {
  * }
  *
  */
-Shell.prototype.du = function(dir, options, callback) {
+Shell.prototype.du = function(dir, callback) {
   var sh = this;
   var fs = sh.fs;
-  if(typeof options === 'function') {
-    callback = options;
-    options = {};
-  }
-  options = options || {};
-  callback = callback || function(){};
 
-  if(!dir) {
-    callback(new Errors.EINVAL('Missing dir argument'));
-    return;
-  }
+  var callback = callback || function(){};
 
-  function list(path, callback) {
+  var result = [];
+  var dirTotal = 0;
+
+  function list( path, callback ) {
     var pathname = Path.resolve(sh.pwd(), path);
-    var result = [];
 
-    fs.readdir(pathname, function(error, entries) {
+    fs.readdir(pathname, function(error, filelist) {
       if(error) {
         callback(error);
         return;
       }
 
-      function getDirEntry(name, callback) {
-        name = Path.join(pathname, name);
-        fs.stat(name, function(error, stats) {
+      function sumFiles(name, callback) {
+        filename = Path.join(pathname, name);
+
+        fs.stat(filename, function(error, stats) {
           if(error) {
             callback(error);
             return;
           }
-          var entry = {
-            filepath: Path.basename(name),
+
+          var fileStats = {
             size: stats.size,
+            path: filename
           };
 
-          if(options.recursive && stats.type === 'DIRECTORY') {
-            list(Path.join(pathname, entry.path), function(error, items) {
+          dirTotal += fileStats.size;
+
+          if(stats.type === 'DIRECTORY') {
+            list(fileStats.path, function(error, items) {
               if(error) {
                 callback(error);
                 return;
               }
-              entry.contents = items;
-              result.push(entry);
+              result.push(fileStats);
               callback();
             });
-          } else {
-            result.push(entry);
+          } else if(stats.type === 'FILE') {
+            result.push(fileStats);
             callback();
           }
         });
       }
 
-      async.eachSeries(entries, getDirEntry, function(error) {
-        callback(error, result);
+      async.eachSeries(filelist, sumFiles, function(error) {
+        if(error) {
+          callback(error);
+          return;
+        }
+        var output = {
+          total: dirTotal,
+          entries: result
+        };
+        callback(error, output);
       });
     });
-  }
+  };
 
-  list(dir, callback);
-}
+  fs.stat(dir, function(error, stats) {
+    if(error) {
+      callback(error);
+      return;
+    }
+
+    var fileStats = {
+      size: stats.size,
+      path: dir
+    };
+
+    if(stats.type === 'FILE') {
+      result.push(fileStats);
+      callback(error, result);
+    } else {
+      result.push(fileStats);
+      list(dir, callback);
+    }
+  });
+};
 
 /**
  * Execute the .js command located at `path`. Such commands
