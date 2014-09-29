@@ -134,36 +134,6 @@ describe('FileSystemShell.du', function() {
       });
     });
   });
-  
-  it('should get the correct usage for multiple directories', function(done) {
-    var fs = util.fs();
-    var sh = fs.Shell();
-    
-    var buf = new Filer.Buffer(10);
-    buf.fill('a');
-    
-    fs.mkdir('/test_dir1', function(err){
-      if(err) throw err;
-      
-      fs.mkdir('/test_dir1/test_dir2', function(err){
-        if(err) throw err;
-        
-        fs.writeFile('/test_dir1/file1', buf, function(err){
-          if(err) throw err;
-          
-          fs.writeFile('/test_dir1/test_dir2/file2', buf, function(err){
-            if(err) throw err;
-            
-            sh.du('/test_dir1', function(err, sizes) {
-              expect(err).not.to.exist;
-              expect(sizes.total).to.equal(20);
-              done();
-            });
-          });
-        });
-      });
-    });
-  });
 
   it('should fail if the path provided does not exist', function(done) {
     var fs = util.fs();
