@@ -483,7 +483,7 @@ Shell.prototype.du = function(path, callback) {
       });
     }
     
-    sh.ls(path, function(err, entries) {
+    fs.readdir(path, function(err, entries) {
       if(err) {
         callback(err);
         return;
