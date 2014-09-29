@@ -426,74 +426,95 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
-//Disk Usage - du
+/*
+*  du (Disk Usage) will give an estimate of the amount of space
+*  used by a directory or file. The path argument can be either
+*  a directory, a file or a symlink'd directory. If a path is 
+*  not provided, the command will be called on the present
+*  working directory.
+*/
 Shell.prototype.du = function(path, callback) {
   var sh = this;
   var fs = sh.fs;
-  //Total count of bytes
-  var sizes = { 
-    total: 0,
-    entries: []
-  };
+  var sizes = {
+    'total': 0,
+    'entries': []
+  }
+  
   callback = callback || function(){};
   path = path || sh.pwd();
-  
-  //Check that the path provided exists.
+
+  //Check that the path provided exists
+  //If not, callback with error
   fs.exists(path, function(exists) {
     if(!exists) {
-      callback(new Errors.EINVAL('Path not found'));
+      callback(new Errors.EINVAL('Path not found'), sizes);
       return;
     }
   });
   
-  path = Path.resolve(sh.pwd(), path);
+  function addEntry(entry, dir) {
+    if(!dir){
+      sizes.total += entry.size;
+    }
+    sizes.entries.push(entry);
+  }
   
-  //Check if path given is a file or directory
-  fs.stat(path, function(err, stats){
-    if(err) {
-      callback(new Errors.EINVAL(null, path));
+  function directory() {
+    var total = 0;
+
+    function getSize(filePath, callback) {
+      filePath = Path.join(path, filePath);
+      
+      sh.du(filePath, function(err, counts) {
+        if(err) {
+          callback(err);
+          return;
+        }
+        
+        if(counts) 
+        {
+          sizes.entries = sizes.entries.concat(counts.entries);
+          sizes.total += counts.total;
+          total += counts.total;
+        }
+        
+        callback();
+      });
     }
     
-    if(stats.isDirectory()) { 
-      //Get a listing of the items in the directory
-      //Should this be done with sh.ls()? or fs.readdir()?
-      sh.ls(path, function(err, entries) {
-        if(err) throw err;
-        var i;
-        //call du recursively on each sub directory at path
-        for(i = 0; i < entries.length; i += 1) {
-          if(entries[i].type === 'DIRECTORY') {
-            sh.du(entries[i].path, function(err, counts) {
-              if(err) throw err;
-              sizes.total += counts.total;
-            });
-          }
-          else {
-            fs.readFile(Path.resolve(path, entries[i].path), function(err, data) {
-              if(err){
-                console.log(err);
-                callback(err);
-              }
-              console.log(path);
-              sizes.total += data.length;
-              sizes.entries.push(path, data.length); 
-              callback(null, sizes);
-            });
-          }
+    sh.ls(path, function(err, entries) {
+      if(err) {
+        callback(err);
+        return;
+      }
+      
+      async.eachSeries(entries, getSize, function(err) {
+        if(err) { 
+          callback(err);
+          return;
         }
-      });
-    }
-    else {
-      fs.readFile(path, function(err, data) {
-        if(err){
-          return callback(err);
-        } 
-        sizes.total += data.length;
-        sizes.entries.push(path, data.length); 
+
+        addEntry({path: path, size: total}, true);
         callback(null, sizes);
       });
+    });
+  }
+
+  fs.lstat(path, function(err, stats) {
+    if(err) {
+      callback(err);
+      return;
     }
-  });             
+      
+    if(stats.type === 'DIRECTORY') {
+      directory();
+      return;
+    }
+      
+    addEntry({path: path, size: stats.size});
+    callback(null, sizes);
+  });
 };
 
 module.exports = Shell;
