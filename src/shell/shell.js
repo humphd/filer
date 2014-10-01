@@ -152,8 +152,16 @@ Shell.prototype.du = function(dir, callback) {
       result.push(fileStats);
       callback(error, result);
     } else {
-      result.push(fileStats);
-      list(dir, callback);
+      list(dir, function(error, everything){
+        result.push(fileStats);
+
+        var output = {
+          total: everything.total,
+          entries: everything.entries
+        };
+
+        callback(error, everything);
+      });
     }
   });
 };
