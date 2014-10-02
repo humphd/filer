@@ -1167,6 +1167,7 @@ var sh = fs.Shell();
 * [sh.rm(path, [options], callback)](#rm)
 * [sh.tempDir(callback)](#tempDir)
 * [sh.mkdirp(path, callback)](#mkdirp)
+* [sh.du(dir, callback)](#du)
 
 
 #### sh.cd(path, callback)<a name="cd"></a>
@@ -1372,4 +1373,21 @@ sh.mkdirp('/test/mkdirp', function(err) {
   if(err) throw err;
   // the root '/' now contains a directory 'test' containing the directory 'mkdirp'
 });
+```
+
+#### sh.du(dir, callback)<a name="du"></a>
+
+Gets the total size for the path and each subdirectory, 
+returning an array of directory entries. Entries are listed in 
+depth-first order followed by the directory itself, in the 
+following form:
+
+ ```
+{
+  total: <Number> the total size in bytes of the directory
+  entries: [
+    { size: <Number> the size in bytes of the entry,
+      path: <String> the file path of the entry }
+  ]
+}
 ```

@@ -59,6 +59,119 @@ function Shell(fs, options) {
 }
 
 /**
+ * Get the total size for the directory and each
+ * subdirectory, returning an array of directory
+ * entries in the following form:
+ *
+ * {
+ *   total: <Number> the total size in bytes of the directory
+ *   entries: [
+ *     {
+ *        size: <Number> the size in bytes of the entry
+ *        path: <String> the file path of the entry
+ *     }
+ *   ]
+ * }
+ *
+ */
+Shell.prototype.du = function(dir, callback) {
+  var sh = this;
+  var fs = sh.fs;
+
+  var callback = callback || function(){};
+
+  var result = [];
+  var dirTotal = 0;
+
+  function list( path, callback ) {
+    var pathname = Path.resolve(sh.pwd(), path);
+
+    fs.readdir(pathname, function(error, filelist) {
+      if(error) {
+        callback(error);
+        return;
+      }
+
+      function sumFiles(name, callback) {
+        filename = Path.join(pathname, name);
+
+        fs.stat(filename, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+
+          var fileStats = {
+            size: stats.size,
+            path: filename
+          };
+
+          dirTotal += fileStats.size;
+
+          if(stats.type === 'DIRECTORY') {
+            list(fileStats.path, function(error, items) {
+              if(error) {
+                callback(error);
+                return;
+              }
+              result.push(fileStats);
+              callback();
+            });
+          } else if(stats.type === 'FILE') {
+            result.push(fileStats);
+            callback();
+          }
+        });
+      }
+
+      async.eachSeries(filelist, sumFiles, function(error) {
+        if(error) {
+          callback(error);
+          return;
+        }
+        var output = {
+          total: dirTotal,
+          entries: result
+        };
+        callback(error, output);
+      });
+    });
+  };
+
+  fs.stat(dir, function(error, stats) {
+    if(error) {
+      callback(error);
+      return;
+    }
+
+    var fileStats = {
+      size: stats.size,
+      path: dir
+    };
+
+    if(stats.type === 'FILE') {
+      result.push(fileStats);
+      callback(error, result);
+    } else {
+      list(dir, function(error, items){
+        if(error) {
+          callback(error);
+          return;
+        }
+        result.push(fileStats);
+
+        var output = {
+          total: items.total,
+          entries: items.entries
+        };
+
+        callback(error, output);
+      });
+    }
+  });
+};
+
+/**
  * Execute the .js command located at `path`. Such commands
  * should assume the existence of 3 arguments, which will be
  * defined at runtime:
