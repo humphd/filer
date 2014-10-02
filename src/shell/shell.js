@@ -66,8 +66,9 @@ function Shell(fs, options) {
  * {
  *   total: <Number> the total size in bytes of the directory
  *   entries: [
- *     {  filepath: <String> the file path of the entry
+ *     {
  *        size: <Number> the size in bytes of the entry
+ *        path: <String> the file path of the entry
  *     }
  *   ]
  * }
@@ -152,15 +153,19 @@ Shell.prototype.du = function(dir, callback) {
       result.push(fileStats);
       callback(error, result);
     } else {
-      list(dir, function(error, everything){
+      list(dir, function(error, items){
+        if(error) {
+          callback(error);
+          return;
+        }
         result.push(fileStats);
 
         var output = {
-          total: everything.total,
-          entries: everything.entries
+          total: items.total,
+          entries: items.entries
         };
 
-        callback(error, everything);
+        callback(error, output);
       });
     }
   });
