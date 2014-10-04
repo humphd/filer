@@ -426,4 +426,75 @@ Shell.prototype.mkdirp = function(path, callback) {
   _mkdirp(path, callback);
 };
 
+/**
+ * The du (i.e., disk usage) command reports 
+ * the sizes of directory trees inclusive of all 
+ * of their contents and the sizes of individual files.
+ */
+Shell.prototype.du = function(dir, options, callback) {
+  var sh = this; 
+  var fs = sh.fs;
+  if(typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  options = options || {};
+  //verify it as a function
+  callback = callback || function(){};
+
+  // if no file path argument is passed
+  if(!dir) {
+    callback(new Errors.EINVAL('Missing dir argument'));
+    return;
+  }
+
+  //if the file listed is a string then du it!!
+  function duIt(item, callback){
+  //get the path to the file
+	var filename = Path.resolve(sh.pwd(),item);
+	var result = [];
+
+	//grab the contents of the directory
+	fs.readdir(filename, function(error, entries) {
+      if(error) {	  
+        callback(error);
+        return;
+      }
+	  function getDirEntry(name, callback) {
+        name = Path.join(filename, name);
+        fs.stat(name, function(error, stats) {
+          if(error) {
+            callback(error);
+            return;
+          }
+	  var entry = {
+		size:stats.size,
+		path: Path.basename(name),
+		type:stats.type
+	  };
+	  
+	  if(options.recursive && stats.type === 'DIRECTORY') {
+            duIt(Path.join(filename, entry.path), function(error, items) {
+              if(error) {
+                callback(error);
+                return;
+              }
+              entry.contents = items;
+              result.push(entry);
+              callback();
+            });
+       } else {
+            result.push(entry);
+            callback();
+          }
+        });
+	}
+	  async.eachSeries(entries, getDirEntry, function(error) {
+        callback(error, result);
+      });
+    });
+  }
+  duIt(dir, callback);
+}; // end du function
+
 module.exports = Shell;
