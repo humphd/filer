@@ -1,10 +1,13 @@
 var path = require('./path.js');
 var hash32 = require('./encoding.js').hash32;
 
-var MODE_FILE = require('./constants.js').MODE_FILE;
-var MODE_DIRECTORY = require('./constants.js').MODE_DIRECTORY;
-var MODE_SYMBOLIC_LINK = require('./constants.js').MODE_SYMBOLIC_LINK;
-var MODE_META = require('./constants.js').MODE_META;
+var NODE_TYPE_FILE = require('./constants.js').NODE_TYPE_FILE;
+var NODE_TYPE_DIRECTORY = require('./constants.js').NODE_TYPE_DIRECTORY;
+var NODE_TYPE_SYMBOLIC_LINK = require('./constants.js').NODE_TYPE_SYMBOLIC_LINK;
+var NODE_TYPE_META = require('./constants.js').NODE_TYPE_META;
+
+var DEFAULT_FILE_PERMISSIONS = require('./constants.js').DEFAULT_FILE_PERMISSIONS;
+var DEFAULT_DIR_PERMISSIONS = require('./constants.js').DEFAULT_DIR_PERMISSIONS;
 
 var P9_QTFILE = require('./constants.js').P9.QTFILE;
 var P9_QTDIR = require('./constants.js').P9.QTDIR;
@@ -16,37 +19,28 @@ var S_IFREG = require('./constants.js').P9.S_IFREG;
 
 var ROOT_DIRECTORY_NAME = require('./constants.js').ROOT_DIRECTORY_NAME;
 
-function getQType(mode) {
-  switch(mode) {
-    case MODE_FILE:
+function getQType(type) {
+  switch(type) {
+    case NODE_TYPE_FILE:
       return P9_QTFILE;
-    case MODE_DIRECTORY:
+    case NODE_TYPE_DIRECTORY:
       return P9_QTDIR;
-    case MODE_SYMBOLIC_LINK:
+    case NODE_TYPE_SYMBOLIC_LINK:
       return P9_QTSYMLINK;
     default:
-      return null;
+      return P9_QTFILE;
   }
 }
 
-function getPOSIXMode(mode) {
-  switch(mode) {
-    case MODE_FILE:
-      return S_IFREG;
-    case MODE_DIRECTORY:
-      return S_IFDIR;
-    case MODE_SYMBOLIC_LINK:
-      return S_IFLNK;
-    default:
-      return null;
-  }
+function pathToName(pathName) {
+  return pathName === ROOT_DIRECTORY_NAME ? ROOT_DIRECTORY_NAME : path.basename(pathName);
 }
 
 function Node(options) {
   var now = Date.now();
 
   this.id = options.id;
-  this.mode = options.mode || MODE_FILE;  // node type (file, directory, etc)
+  this.type = options.type || NODE_TYPE_FILE;  // node type (file, directory, etc)
   this.size = options.size || 0; // size (bytes for files, entries for directories)
   this.atime = options.atime || now; // access time (will mirror ctime after creation)
   this.ctime = options.ctime || now; // creation/change time
@@ -54,10 +48,12 @@ function Node(options) {
   this.flags = options.flags || []; // file flags
   this.xattrs = options.xattrs || {}; // extended attributes
   this.nlinks = options.nlinks || 0; // links count
-  this.version = options.version || 0; // node version
-  this.blksize = undefined; // block size
-  this.nblocks = 1; // blocks count
   this.data = options.data; // id for data object
+
+  // permissions and owner flags
+  this.mode = options.mode || (this.type === NODE_TYPE_DIRECTORY ? DEFAULT_DIR_PERMISSIONS : DEFAULT_FILE_PERMISSIONS),
+  this.uid = options.uid || 0x0, // owner name
+  this.gid = options.gid || 0x0, // group name
 
   /**
    * Plan 9 related metadata:
@@ -75,35 +71,20 @@ function Node(options) {
    * should be different. The version is a version number for a file; typically,
    * it is incremented every time the file is modified."
    */
+  /*jshint -W030*/
+  this.q_type = options.q_type || (getQType(this.type));
+  this.q_version = options.q_version || 1;
+  this.q_path = options.q_path || hash32(options.path + this.q_version);
 
-  options.p9 = options.p9 || {qid: {}};
-
-  this.p9 = {
-    qid: {
-      type: options.p9.qid.type || (getQType(this.mode) || P9_QTFILE),
-      // use mtime for version info, since we already keep that updated
-      version: options.p9.qid.now || now,
-      // files have a unique `path` number, which takes into account files with same
-      // name but created at different times.
-      path: options.p9.qid.path || hash32(options.path + this.ctime)
-    },
-    // permissions and flags
-    // TODO: I don't think I'm doing this correctly yet...
-    mode: options.p9.mode || (getPOSIXMode(this.mode) || S_IFREG),
-    // Name of file/dir. Must be / if the file is the root directory of the server
-    // TODO: do I need this or can I derive it from abs path?
-    name: options.p9.name || (options.path === ROOT_DIRECTORY_NAME ? ROOT_DIRECTORY_NAME : path.basename(options.path)),
-    uid: options.p9.uid || 0x0, // owner name
-    gid: options.p9.gid || 0x0, // group name
-    muid: options.p9.muid || 0x0 // name of the user who last modified the file 
-  };
+  // Name of file/dir. Must be `/` if the file is the root directory, or the path's basename
+  this.name = options.name || pathToName(options.path);
 }
 
 // When the node's path changes, update info that relates to it.
-Node.prototype.updatePathInfo = function(newPath, ctime) {
+Node.prototype.updatePathInfo = function(newPath) {
   // XXX: need to confirm that qid's path actually changes on rename.
-  this.p9.qid.path = hash32(newPath + (ctime || this.ctime));
-  this.p9.name = newPath === ROOT_DIRECTORY_NAME ? ROOT_DIRECTORY_NAME : path.basename(newPath);
+  this.q_path = hash32(newPath + this.q_version);
+  this.name = pathToName(newPath);
 };
 
 // Make sure the options object has an id on property,
@@ -141,27 +122,22 @@ Node.create = function(options, callback) {
 Node.fromObject = function(object) {
   return new Node({
     id: object.id,
-    mode: object.mode,
+    type: object.type,
     size: object.size,
     atime: object.atime,
-    ctime: object.ctime,
     mtime: object.mtime,
+    ctime: object.ctime,
     flags: object.flags,
     xattrs: object.xattrs,
     nlinks: object.nlinks,
     data: object.data,
-    p9: {
-      qid: {
-        type: object.p9.qid.type,
-        version: object.p9.qid.version,
-        path: object.p9.qid.path
-      },
-      mode: object.p9.mode,
-      name: object.p9.name,
-      uid: object.p9.uid,
-      gid: object.p9.gid,
-      muid: object.p9.muid 
-    }
+    mode: object.mode,
+    uid: object.uid,
+    gid: object.gid,
+    q_type: object.q_type,
+    q_version: object.q_version,
+    q_path: object.q_path,
+    name: object.name
   });
 };
 

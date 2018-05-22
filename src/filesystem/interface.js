@@ -268,6 +268,10 @@ FileSystem.providers = providers;
  */
 [
   'open',
+  'chmod',
+  'fchmod',
+  'chown',
+  'fchown',
   'close',
   'mknod',
   'mkdir',
