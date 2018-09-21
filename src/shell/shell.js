@@ -374,6 +374,7 @@ Shell.prototype.tempDir = function(callback) {
 /**
  * Recursively creates the directory at `path`. If the parent
  * of `path` does not exist, it will be created.
+ * This is just a wrapper around fs.mkdir with recursive:true.
  * Based off EnsureDir by Sam X. Xu
  * https://www.npmjs.org/package/ensureDir
  * MIT License
@@ -387,56 +388,8 @@ Shell.prototype.mkdirp = function(path, callback) {
     callback(new Errors.EINVAL('Missing path argument'));
     return;
   }
-  else if (path === '/') {
-    callback();
-    return;
-  }
-  function _mkdirp(path, callback) {
-    fs.stat(path, function (err, stat) {
-      if(stat) {
-        if(stat.isDirectory()) {
-          callback();
-          return;
-        }
-        else if (stat.isFile()) {
-          callback(new Errors.ENOTDIR(null, path));
-          return;
-        }
-      }
-      else if (err && err.code !== 'ENOENT') {
-        callback(err);
-        return;
-      }
-      else {
-        var parent = Path.dirname(path);
-        if(parent === '/') {
-          fs.mkdir(path, function (err) {
-            if (err && err.code != 'EEXIST') {
-              callback(err);
-              return;
-            }
-            callback();
-            return;
-          });
-        }
-        else {
-          _mkdirp(parent, function (err) {
-            if (err) return callback(err);
-            fs.mkdir(path, function (err) {
-              if (err && err.code != 'EEXIST') {
-                callback(err);
-                return;
-              }
-              callback();
-              return;
-            });
-          });
-        }
-      }
-    });
-  }
 
-  _mkdirp(path, callback);
+  fs.mkdir(path, {recursive: true}, callback);
 };
 
 /**
