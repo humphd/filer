@@ -305,7 +305,7 @@ var fs = new Filer.FileSystem();
 * [fs.unlink(path, callback)](#unlink)
 * [fs.mknod(path, mode, callback)](#mknod)
 * [fs.rmdir(path, callback)](#rmdir)
-* [fs.mkdir(path, [mode], callback)](#mkdir)
+* [fs.mkdir(path, [options], callback)](#mkdir)
 * [fs.readdir(path, callback)](#readdir)
 * [fs.close(fd, callback)](#close)
 * [fs.open(path, flags, [mode], callback)](#open)
@@ -653,11 +653,12 @@ fs.unlink('/docs/a.txt', function(err) {
 });
 ```
 
-#### fs.mkdir(path, [mode], callback)<a name="mkdir"></a>
+#### fs.mkdir(path, [options], callback)<a name="mkdir"></a>
 
 Makes a directory with name supplied in `path` argument. Asynchronous [mkdir(2)](http://pubs.opengroup.org/onlinepubs/009695399/functions/mkdir.html). Callback gets no additional arguments.
 
-NOTE: Filer allows for, but ignores the optional `mode` argument used in node.js.
+`options` can contain `recursive:true` if you want to create parent paths; 
+NOTE: it can also contain `mode`, but Filer ignores the optional `mode` argument used in node.js.
 
 Example:
 
